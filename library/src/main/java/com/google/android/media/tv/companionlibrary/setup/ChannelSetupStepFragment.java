@@ -22,10 +22,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.tv.TvInputInfo;
 import android.os.Bundle;
-import android.support.v17.leanback.app.GuidedStepFragment;
-import android.support.v17.leanback.widget.GuidanceStylist.Guidance;
-import android.support.v17.leanback.widget.GuidedAction;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.leanback.app.GuidedStepFragment;
+import androidx.leanback.widget.GuidanceStylist.Guidance;
+import androidx.leanback.widget.GuidedAction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.util.Log;
 import android.util.Pair;
 import android.widget.ProgressBar;
@@ -162,7 +163,7 @@ public abstract class ChannelSetupStepFragment<J extends EpgSyncJobService>
         actions.add(
                 new GuidedAction.Builder(getContext())
                         .id(GuidedAction.ACTION_ID_FINISH)
-                        .title(R.string.lb_guidedaction_finish_title)
+                        .title(androidx.leanback.R.string.lb_guidedaction_finish_title)
                         .build());
         setActions(actions);
         setupPeriodicSync();

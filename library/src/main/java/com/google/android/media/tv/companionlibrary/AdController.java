@@ -17,18 +17,21 @@
 package com.google.android.media.tv.companionlibrary;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import com.google.ads.interactivemedia.v3.api.AdDisplayContainer;
 import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
 import com.google.ads.interactivemedia.v3.api.AdEvent;
+import com.google.ads.interactivemedia.v3.api.AdPodInfo;
 import com.google.ads.interactivemedia.v3.api.AdsLoader;
 import com.google.ads.interactivemedia.v3.api.AdsManager;
 import com.google.ads.interactivemedia.v3.api.AdsManagerLoadedEvent;
 import com.google.ads.interactivemedia.v3.api.AdsRequest;
 import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
+import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
+import com.google.ads.interactivemedia.v3.api.player.AdMediaInfo;
 import com.google.ads.interactivemedia.v3.api.player.VideoAdPlayer;
 import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
 import java.util.ArrayList;
@@ -96,12 +99,16 @@ public class AdController
 
     public AdController(Context context) {
         // Create an AdsLoader.
+        mStubViewGroup = new FrameLayout(context);
+
         mSdkFactory = ImaSdkFactory.getInstance();
-        mAdsLoader = mSdkFactory.createAdsLoader(context);
+        mAdDisplayContainer = mSdkFactory.createAdDisplayContainer();
+        mAdDisplayContainer.setPlayer(new VideoAdPlayerImpl());
+        mAdDisplayContainer.setAdContainer(mStubViewGroup);
+        ImaSdkSettings settings = mSdkFactory.createImaSdkSettings();
+        mAdsLoader = mSdkFactory.createAdsLoader(context, settings, mAdDisplayContainer);
         mAdsLoader.addAdErrorListener(this);
         mAdsLoader.addAdsLoadedListener(this);
-
-        mStubViewGroup = new FrameLayout(context);
     }
 
     /**
@@ -113,14 +120,9 @@ public class AdController
             @NonNull String adRequestUrl, @NonNull AdControllerCallback adControllerCallback) {
         mAdControllerCallback = adControllerCallback;
 
-        mAdDisplayContainer = mSdkFactory.createAdDisplayContainer();
-        mAdDisplayContainer.setPlayer(new VideoAdPlayerImpl());
-        mAdDisplayContainer.setAdContainer(mStubViewGroup);
-
         // Create the ads request.
         AdsRequest request = mSdkFactory.createAdsRequest();
         request.setAdTagUrl(adRequestUrl);
-        request.setAdDisplayContainer(mAdDisplayContainer);
 
         // Request the ad. After the ad is loaded, onAdsManagerLoaded() will be called.
         mAdsLoader.requestAds(request);
@@ -185,7 +187,7 @@ public class AdController
     }
 
     private class VideoAdPlayerImpl extends TvPlayer.Callback implements VideoAdPlayer {
-        String mAdVideoUrl;
+        private AdMediaInfo mAdMediaInfo;
         TvPlayer mTvPlayer;
         List<VideoAdPlayerCallback> mAdCallbacks;
 
@@ -194,30 +196,35 @@ public class AdController
         }
 
         @Override
-        public void loadAd(String adVideoUrl) {
-            mAdVideoUrl = adVideoUrl;
+        public void loadAd(@NonNull AdMediaInfo adMediaInfo, @NonNull AdPodInfo adPodInfo) {
+            mAdMediaInfo = adMediaInfo;
         }
 
         @Override
-        public void playAd() {
-            mTvPlayer = mAdControllerCallback.onAdReadyToPlay(mAdVideoUrl);
+        public void playAd(@NonNull AdMediaInfo adMediaInfo) {
+            mTvPlayer = mAdControllerCallback.onAdReadyToPlay(adMediaInfo.getUrl());
             mTvPlayer.registerCallback(this);
             mTvPlayer.play();
         }
 
         @Override
-        public void stopAd() {
+        public void stopAd(@NonNull AdMediaInfo adMediaInfo) {
             // Do nothing.
         }
 
         @Override
-        public void pauseAd() {
+        public void pauseAd(@NonNull AdMediaInfo adMediaInfo) {
             // Do nothing.
         }
 
         @Override
-        public void resumeAd() {
+        public void release() {
             // Do nothing.
+        }
+
+        @Override
+        public int getVolume() {
+            return 0;
         }
 
         @Override
@@ -241,35 +248,35 @@ public class AdController
         @Override
         public void onStarted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
-                callback.onPlay();
+                callback.onPlay(mAdMediaInfo);
             }
         }
 
         @Override
         public void onCompleted() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
-                callback.onEnded();
+                callback.onEnded(mAdMediaInfo);
             }
         }
 
         @Override
         public void onError(Exception error) {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
-                callback.onError();
+                callback.onError(mAdMediaInfo);
             }
         }
 
         @Override
         public void onPaused() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
-                callback.onPause();
+                callback.onPause(mAdMediaInfo);
             }
         }
 
         @Override
         public void onResumed() {
             for (VideoAdPlayerCallback callback : mAdCallbacks) {
-                callback.onResume();
+                callback.onResume(mAdMediaInfo);
             }
         }
     }
