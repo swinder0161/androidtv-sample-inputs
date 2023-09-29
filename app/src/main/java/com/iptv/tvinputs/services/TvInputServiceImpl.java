@@ -27,21 +27,22 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.text.Cue;
-import com.google.android.exoplayer2.ui.CaptionStyleCompat;
-import com.google.android.exoplayer2.ui.SubtitleView;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.media3.common.Format;
+import androidx.media3.common.Player;
+import androidx.media3.common.text.Cue;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.ui.CaptionStyleCompat;
+import androidx.media3.ui.SubtitleView;
+
 import com.google.android.media.tv.companionlibrary.BaseTvInputService;
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 import com.google.android.media.tv.companionlibrary.model.Advertisement;
@@ -65,6 +66,7 @@ import java.util.Map;
  * TvInputService which provides a full implementation of EPG, subtitles, multi-audio, parental
  * controls, and overlay view.
  */
+@UnstableApi
 public class TvInputServiceImpl extends BaseTvInputService {
     private static final String TAG = "TvInputServiceImpl";
     private static final boolean DEBUG = false;
@@ -131,6 +133,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
         return Integer.parseInt(trackId.split("-")[1]);
     }
 
+    @UnstableApi
     class TvInputSessionImpl extends Session implements
             ExoPlayerImpl.Listener, ExoPlayerImpl.CaptionListener {
         private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
@@ -387,7 +390,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
                 return;
             }
 
-            if (playWhenReady && playbackState == ExoPlayer.STATE_READY) {
+            if (playWhenReady && playbackState == Player.STATE_READY) {
                 notifyTracksChanged(getAllTracks());
                 String audioId = getTrackId(TvTrackInfo.TYPE_AUDIO,
                         mPlayer.getSelectedTrack(ExoPlayerImpl.TRACK_TYPE_AUDIO));
@@ -401,7 +404,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
                 notifyTrackSelected(TvTrackInfo.TYPE_SUBTITLE, textId);
                 notifyVideoAvailable();
             } else if (Math.abs(mPlayer.getPlaybackSpeed() - 1) < 0.1 &&
-                    playWhenReady && playbackState == ExoPlayer.STATE_BUFFERING) {
+                    playWhenReady && playbackState == Player.STATE_BUFFERING) {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
             }
             Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onStateChanged()");
