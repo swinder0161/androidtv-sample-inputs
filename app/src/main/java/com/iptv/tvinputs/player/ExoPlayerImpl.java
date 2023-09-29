@@ -32,6 +32,7 @@ import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.video.VideoSize;
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.iptv.tvinputs.m3u.EPGImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -68,9 +69,9 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     private boolean mPlayWhenReady;
     private Surface mSurface;
 
-    public ExoPlayerImpl(Context context, int contentType, String videoUrl, String licenseUrl) {
+    public ExoPlayerImpl(Context context, int contentType, String channelId) {
         Log.i("swidebug", "> ExoPlayerImpl ExoPlayerImpl() contentType: " + contentType +
-                ", videoUrl: " + videoUrl + ", licenseUrl" + licenseUrl);
+                ", channelId: " + channelId);
         mContext = context;
         mPlayer = null;
         mPlaybackParams = null;
@@ -81,8 +82,10 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         mPlayWhenReady = false;
         mSurface = null;
 
-        MediaSource mediaSource = getMediaSource(contentType, videoUrl, licenseUrl);
+        String videoUrl = EPGImpl.getInstance().getChannelUrl(channelId);
+        String licenseUrl = EPGImpl.getInstance().getChannelLicenseUrl(channelId);
 
+        MediaSource mediaSource = getMediaSource(contentType, videoUrl, licenseUrl);
         if (null != mediaSource) {
             mPlayer = new ExoPlayer.Builder(mContext)
                     .setSeekForwardIncrementMs(10000)
@@ -98,7 +101,6 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         Log.i("swidebug", "> ExoPlayerImpl prepare()");
         if (mPlaybackState != ExoPlayer.STATE_IDLE)
             mPlayer.stop();
-        //mPlayer.prepare();
         maybeReportPlayerState();
         Log.i("swidebug", "< ExoPlayerImpl prepare()");
     }

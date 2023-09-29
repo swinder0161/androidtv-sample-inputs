@@ -70,7 +70,9 @@ public final class TvContractUtils {
         try {
             is = sourceUrl.openStream();
             os = context.getContentResolver().openOutputStream(contentUri);
-            copy(is, os);
+            if (false == copy(is, os)) {
+                Log.e(TAG, "insertUrl is: " + is + ", os: " + os);
+            }
         } catch (IOException ioe) {
             Log.e(TAG, "Failed to write " + sourceUrl + "  to " + contentUri, ioe);
         } finally {
@@ -91,12 +93,21 @@ public final class TvContractUtils {
         }
     }
 
-    private static void copy(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = is.read(buffer)) != -1) {
-            os.write(buffer, 0, len);
+    private static boolean copy(InputStream is, OutputStream os) throws IOException {
+        try {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
+        } catch (IOException ioe) {
+            throw ioe;
+        } catch (Exception ex) {
+            Log.e(TAG, "got exception in copy : " + ex.getMessage());
+            ex.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     /**

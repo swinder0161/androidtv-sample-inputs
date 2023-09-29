@@ -109,7 +109,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
     /**
      * Gets the track id of the track type and track index.
      *
-     * @param trackType  the type of the track e.g. TvTrackInfo.TYPE_AUDIO
+     * @param tvTrackType  the type of the track e.g. TvTrackInfo.TYPE_AUDIO
      * @param trackIndex the index of that track within the media. e.g. 0, 1, 2...
      * @return the track id for the type & index combination.
      */
@@ -291,14 +291,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
         private void createPlayer(int videoType, String videoId) {
             Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl createPlayer() videoType: " + videoType + ", videoId: " + videoId);
-            //ToDo
-            String videoUrl = "https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd";
-            //TvXmlCreator.getChannelUrl(videoUrl.toString());
-            String licenseUrl = "https://proxy.uat.widevine.com/proxy?provider=widevine_test";
-            //TvXmlCreator.getChannelLicense(videoUrl.toString());
-            Log.i("swidebug", ". TvInputServiceImpl TvInputSessionImpl createPlayer() videoUrl: " + videoUrl + ", licenseUrl: " + licenseUrl);
-            releasePlayer();
-            mPlayer = new ExoPlayerImpl(mContext, videoType, videoUrl, licenseUrl);
+            mPlayer = new ExoPlayerImpl(mContext, videoType, videoId);
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
             mPlayer.prepare();

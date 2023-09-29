@@ -15,21 +15,17 @@
  */
 package com.iptv.tvinputs.services;
 
-import android.media.tv.TvContract;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.model.Channel;
-import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
-import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
+import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
+import com.iptv.tvinputs.m3u.EPGImpl;
+import com.iptv.tvinputs.m3u.M3UParser;
+import com.iptv.tvinputs.util.Utils;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * EpgSyncJobService that periodically runs to update channels and programs.
@@ -38,19 +34,11 @@ public class EpgSyncJobServiceImpl extends EpgSyncJobService {
     @Override
     public List<Channel> getChannels() {
         Log.i("swidebug", "> EpgSyncJobServiceImpl getChannels()");
-        List<Channel> channelList = new ArrayList<>();
-        // Add a channel programmatically
-        InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setRepeatable(true);
-        Channel channelTears = new Channel.Builder()
-                .setDisplayName("MPEG_DASH")
-                .setDisplayNumber("1")
-                .setChannelLogo("https://storage.googleapis.com/android-tv/images/mpeg_dash.png")
-                .setOriginalNetworkId(101)
-                .setInternalProviderData(internalProviderData)
-                .build();
-        channelList.add(channelTears);
-        Log.i("swidebug", "< EpgSyncJobServiceImpl getChannels()");
+        M3UParser.getInstance().parse(Utils.getPlaylistUrl(), M3UParser.PARSE_FULL);
+        Log.i("swidebug", ". EpgSyncJobServiceImpl getChannels() EPG parsed");
+        List<Channel> channelList = EPGImpl.getInstance().getChannels();
+        Log.i("swidebug", "< EpgSyncJobServiceImpl getChannels() count: " + channelList.size());
+        //Log.v("swidebug", "< EpgSyncJobServiceImpl getChannels() " + channelList);
         return channelList;
     }
 
@@ -58,26 +46,10 @@ public class EpgSyncJobServiceImpl extends EpgSyncJobService {
     public List<Program> getProgramsForChannel(Uri channelUri, Channel channel,
             long startMs, long endMs) {
         Log.i("swidebug", "> EpgSyncJobServiceImpl getProgramsForChannel() channelUri: " +
-                channelUri + ", channel: " + channel + ", time: " + startMs + " - " + endMs);
-        // Programatically add channel
-        List<Program> programsTears = new ArrayList<>();
-        InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_MPEG_DASH);
-        internalProviderData.setVideoUrl("ts222");
-        Date utcDate = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
-        long timeMillis = utcDate.getTime() - 10000;
-        programsTears.add(new Program.Builder()
-                .setTitle("11331")
-                .setStartTimeUtcMillis(timeMillis)
-                .setEndTimeUtcMillis(timeMillis + 3*60*1000)
-                .setDescription("check for mpeg dash")
-                .setCanonicalGenres(new String[] {TvContract.Programs.Genres.TECH_SCIENCE,
-                        TvContract.Programs.Genres.MOVIES})
-                .setPosterArtUri("https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg")
-                .setThumbnailUri("https://storage.googleapis.com/gtv-videos-bucket/sample/images/tears.jpg")
-                .setInternalProviderData(internalProviderData)
-                .build());
-        Log.i("swidebug", "< EpgSyncJobServiceImpl getProgramsForChannel() program");
-        return programsTears;
+                channelUri + ", channel: " + channel +", time: " + startMs + " - " + endMs);
+        List<Program> list = EPGImpl.getInstance().getPrograms(channel, startMs, endMs);
+        Log.i("swidebug", "< EpgSyncJobServiceImpl getProgramsForChannel() count: " + list.size());
+        //Log.v("swidebug", "< EpgSyncJobServiceImpl getProgramsForChannel() list: " + list);
+        return list;
     }
 }
