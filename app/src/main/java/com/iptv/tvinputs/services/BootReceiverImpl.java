@@ -22,10 +22,9 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.util.Log;
 
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
+import com.iptv.tvinputs.util.Log;
 
 import java.util.List;
 
@@ -47,18 +46,10 @@ public class BootReceiverImpl extends BroadcastReceiver{
             if (inputId != null) {
                 // Set up periodic sync only when input has set up.
                 EpgSyncJobService.setUpPeriodicSync(context, inputId,
-                        new ComponentName(context, EpgSyncJobService.class));
+                        new ComponentName(context, EpgSyncJobServiceImpl.class));
             }
             Log.i("swidebug", "< BootReceiverImpl onReceive() if");
             return;
-        }
-        // On L/L-MR1, reschedule the pending jobs.
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            for (JobInfo job : pendingJobs) {
-                if (job.isPersisted()) {
-                    jobScheduler.schedule(job);
-                }
-            }
         }
         Log.i("swidebug", "< BootReceiverImpl onReceive()");
     }

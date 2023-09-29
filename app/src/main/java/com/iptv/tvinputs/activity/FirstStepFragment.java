@@ -18,13 +18,14 @@ package com.iptv.tvinputs.activity;
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.leanback.app.GuidedStepFragment;
 import androidx.leanback.widget.GuidanceStylist.Guidance;
 import androidx.leanback.widget.GuidedAction;
-import android.util.Log;
 
 import com.iptv.tvinputs.R;
+import com.iptv.tvinputs.util.Log;
 
 import java.util.List;
 

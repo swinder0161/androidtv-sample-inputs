@@ -19,7 +19,9 @@ package com.iptv.tvinputs.activity;
 import android.app.Activity;
 import android.os.Bundle;
 import androidx.leanback.app.GuidedStepFragment;
-import android.util.Log;
+
+import com.iptv.tvinputs.services.TvInputServiceImpl;
+import com.iptv.tvinputs.util.Log;
 
 /** The setup activity for demonstrating {@link TvInputServiceImpl}. */
 public class TvInputSetupActivity extends Activity {

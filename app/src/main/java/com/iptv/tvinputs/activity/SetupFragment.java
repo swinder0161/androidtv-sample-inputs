@@ -20,26 +20,23 @@ import android.media.tv.TvInputInfo;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.leanback.widget.GuidanceStylist.Guidance;
-import android.util.Log;
 
+import com.google.android.media.tv.companionlibrary.setup.ChannelSetupStepFragment;
 import com.iptv.tvinputs.R;
 import com.iptv.tvinputs.services.EpgSyncJobServiceImpl;
-import com.google.android.media.tv.companionlibrary.setup.ChannelSetupStepFragment;
+import com.iptv.tvinputs.util.Log;
 
 /**
- * Fragment which shows a sample UI for registering channels and setting up SampleJobService to
+ * Fragment which shows a sample UI for registering channels and setting up EpgSyncJobServiceImpl to
  * provide program information in the background.
  */
 public class SetupFragment extends ChannelSetupStepFragment<EpgSyncJobServiceImpl> {
-
-    private String mInputId = null;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i("swidebug", "> SetupFragment onCreate()");
-        mInputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
-        Log.i("swidebug", "< SetupFragment onCreate()");
+        String inputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
+        Log.i("swidebug", "< SetupFragment onCreate() inputId: " + inputId);
     }
 
     @Override
@@ -49,6 +46,7 @@ public class SetupFragment extends ChannelSetupStepFragment<EpgSyncJobServiceImp
         return EpgSyncJobServiceImpl.class;
     }
 
+    @NonNull
     @Override
     public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
         Log.i("swidebug", "> SetupFragment onCreateGuidance()");
@@ -60,9 +58,13 @@ public class SetupFragment extends ChannelSetupStepFragment<EpgSyncJobServiceImp
         return g;
     }
 
-    public String getInputId() {
-        Log.i("swidebug", "> SetupFragment getInputId()");
-        Log.i("swidebug", "< SetupFragment getInputId()");
-        return mInputId;
+    @Override
+    public long getFullSyncWindowSec() {
+        return 1000 * 60 * 60 * 24 * 3; // 3 days
+    }
+
+    @Override
+    public long getFullSyncFrequencyMillis() {
+        return 1000 * 60 * 60 * 6; // 6 hrs
     }
 }

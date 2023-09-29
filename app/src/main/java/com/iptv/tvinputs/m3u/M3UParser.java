@@ -59,7 +59,7 @@ public class M3UParser {
     private long mLastSyncTime = 0;
     private long mLastSyncTimeManifest = 0;
 
-    private Object mutex = new Object();
+    private final Object mutex = new Object();
 
     private M3UParser() {
     }
@@ -142,7 +142,7 @@ public class M3UParser {
                     //Log.i("swidebug", "line: " + tmp);
                     try {
                         if (tmp.startsWith(PREFIX_EXTM3U) && (PARSE_FULL == syncType)) {
-                            success = handler.onReadEXTM3U(parseHead(trim(tmp.replaceFirst(
+                            success &= handler.onReadEXTM3U(parseHead(trim(tmp.replaceFirst(
                                     PREFIX_EXTM3U, EMPTY_STRING))));
                         } else if (tmp.startsWith(PREFIX_KODIPROP)) {
                             mTempItem = parseKodiProp(trim(tmp.replaceFirst(
@@ -159,7 +159,7 @@ public class M3UParser {
                         } else { // The single line is treated as the stream URL.
                             //Log.i("swidebug", "updateURL: " + tmp);
                             updateURL(tmp);
-                            success = flush(handler);
+                            success &= flush(handler);
                         }
                     } catch (Exception ex) {
                         success = false;
@@ -174,8 +174,10 @@ public class M3UParser {
                 if (syncType == PARSE_FULL) mLastSyncTime = mLastSyncTimeManifest;
             }
         } catch (FileNotFoundException e) {
+            Log.e("swidebug", ". M3UParser parse() file not found exception: " + e.getMessage());
             e.printStackTrace();
         } catch (IOException e) {
+            Log.e("swidebug", ". M3UParser parse() io exception: " + e.getMessage());
             e.printStackTrace();
         }
     }

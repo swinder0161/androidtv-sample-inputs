@@ -49,8 +49,8 @@
             </intent-filter>
         </activity>
 
-        <!-- Launched by the TV app before it uses RichTvInputService. This registers channels and
-        sets up SampleJobService to provide program information in the background. -->
+        <!-- Launched by the TV app before it uses TvInputService. This registers channels and
+        sets up EpgSyncJobServiceImpl to provide program information in the background. -->
         <activity android:name=".activity.TvInputSetupActivity"
             android:theme="@style/TifSetup"
             android:exported="true">

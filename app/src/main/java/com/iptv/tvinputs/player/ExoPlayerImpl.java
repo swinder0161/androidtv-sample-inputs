@@ -1,23 +1,21 @@
 package com.iptv.tvinputs.player;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.PlaybackParams;
 import android.net.Uri;
-import android.os.Build;
-import android.util.Log;
 import android.view.Surface;
 
+import androidx.annotation.NonNull;
 import androidx.media3.common.C;
 import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.Tracks;
 import androidx.media3.common.TrackGroup;
 import androidx.media3.common.TrackSelectionOverride;
 import androidx.media3.common.TrackSelectionParameters;
+import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.text.Cue;
 import androidx.media3.common.text.CueGroup;
@@ -34,6 +32,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
 import com.iptv.tvinputs.m3u.EPGImpl;
+import com.iptv.tvinputs.util.Log;
 
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +68,6 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     private CaptionListener mCaptionListener;
     private int mPlaybackState;
     private boolean mPlayWhenReady;
-    private Surface mSurface;
 
     public ExoPlayerImpl(Context context, int contentType, String channelId) {
         Log.i("swidebug", "> ExoPlayerImpl ExoPlayerImpl() contentType: " + contentType +
@@ -82,7 +80,6 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         mCaptionListener = null;
         mPlaybackState = ExoPlayer.STATE_IDLE;
         mPlayWhenReady = false;
-        mSurface = null;
 
         String videoUrl = EPGImpl.getInstance().getChannelUrl(channelId);
         String licenseUrl = EPGImpl.getInstance().getChannelLicenseUrl(channelId);
@@ -158,7 +155,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
             for (int i=0; i<g.length; i++) {
                 Format fmt = g.getTrackFormat(i);
                 Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() fmt[" + i +"]: " + fmt);
-                if (fmt.id == tfmt.id) {
+                if (fmt.id.equals(tfmt.id)) {
                     index = i;
                     Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() found match: " + i);
                     break;
@@ -182,12 +179,11 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         builder.addOverride(override);
         mPlayer.setTrackSelectionParameters(builder.build());
         if (trackType == TRACK_TYPE_TEXT && index < 0 && mCaptionListener != null) {
-            mCaptionListener.onCues(Collections.<Cue>emptyList());
+            mCaptionListener.onCues(Collections.emptyList());
         }
         Log.i("swidebug", "< ExoPlayerImpl setSelectedTrack()");
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     public float getPlaybackSpeed() {
         Log.i("swidebug", "> ExoPlayerImpl getPlaybackSpeed()");
         float s = mPlaybackParams == null ? DefaultAudioSink.DEFAULT_PLAYBACK_SPEED : mPlaybackParams.getSpeed();
@@ -241,6 +237,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         MediaSource mediaSource;
         switch (contentType) {
             case TvContractUtils.SOURCE_TYPE_MPEG_DASH: {
+                Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_MPEG_DASH");
                 DashChunkSource.Factory dashChunkSourceFactory = new DefaultDashChunkSource.Factory(defaultHttpDataSourceFactory);
 
                 mediaSource = new DashMediaSource.Factory(dashChunkSourceFactory, manifestDataSourceFactory)
@@ -255,12 +252,15 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
                                         .build());
             } break;
             case TvContractUtils.SOURCE_TYPE_SS: {
+                Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_SS");
                 mediaSource = null;
             } break;
             case TvContractUtils.SOURCE_TYPE_HLS: {
+                Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_HLS");
                 mediaSource = null;
             } break;
             case TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE: {
+                Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_HTTP_PROGRESSIVE");
                 mediaSource = null;
             } break;
             default: {
@@ -348,7 +348,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     }
 
     @Override
-    public void onPlayerError(PlaybackException error) {
+    public void onPlayerError(@NonNull PlaybackException error) {
         Player.Listener.super.onPlayerError(error);
         Log.i("swidebug", "> ExoPlayerImpl onPlayerError() error: " + error.getMessage());
         for (Callback tvCallback : mTvPlayerCallbacks) {
@@ -362,7 +362,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     }
 
     @Override
-    public void onCues(CueGroup cueGroup) {
+    public void onCues(@NonNull CueGroup cueGroup) {
         Player.Listener.super.onCues(cueGroup);
         Log.i("swidebug", "> ExoPlayerImpl onCues() cueGroup: " + cueGroup);
         if (mCaptionListener != null && getSelectedTrack(TRACK_TYPE_TEXT) != TRACK_DISABLED) {
@@ -372,7 +372,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     }
 
     @Override
-    public void onVideoSizeChanged(VideoSize videoSize) {
+    public void onVideoSizeChanged(@NonNull VideoSize videoSize) {
         Player.Listener.super.onVideoSizeChanged(videoSize);
         Log.i("swidebug", "> ExoPlayerImpl onVideoSizeChanged() videoSize: " + videoSize.width + " X " + videoSize.height);
         for (Listener listener : mListeners) {
@@ -423,7 +423,6 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     @Override
     public void setSurface(Surface surface) {
         Log.i("swidebug", "> ExoPlayerImpl setSurface() surface: " + surface);
-        mSurface = surface;
         //mPlayer.setPlayWhenReady(false);
         mPlayer.setVideoSurface(surface);
         if (null != surface) {

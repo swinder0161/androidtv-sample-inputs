@@ -18,7 +18,8 @@ package com.iptv.tvinputs;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
+
+import com.iptv.tvinputs.util.Log;
 
 /**
  * MainActivity class that loads {@link MainFragment}.

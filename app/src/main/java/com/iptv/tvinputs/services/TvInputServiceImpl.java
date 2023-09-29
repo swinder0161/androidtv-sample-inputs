@@ -24,10 +24,8 @@ import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,7 +33,6 @@ import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.media3.common.Format;
 import androidx.media3.common.Player;
 import androidx.media3.common.text.Cue;
@@ -53,9 +50,9 @@ import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-
 import com.iptv.tvinputs.R;
 import com.iptv.tvinputs.player.ExoPlayerImpl;
+import com.iptv.tvinputs.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,7 +95,6 @@ public class TvInputServiceImpl extends BaseTvInputService {
         return s;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Nullable
     @Override
     public TvInputService.RecordingSession onCreateRecordingSession(String inputId) {
@@ -147,7 +143,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
         private ExoPlayerImpl mPlayer;
         private boolean mCaptionEnabled;
 
-            TvInputSessionImpl(Context context, String inputId) {
+        TvInputSessionImpl(Context context, String inputId) {
             super(context, inputId);
             Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl TvInputSessionImpl() inputId: " + inputId);
             mCaptionEnabled = mCaptioningManager.isEnabled();
@@ -184,15 +180,12 @@ public class TvInputServiceImpl extends BaseTvInputService {
             for (int tvTrackType : mTrackTypes.keySet()) {
                 int playerTrackType = mTrackTypes.get(tvTrackType);
                 int count = mPlayer.getTrackCount(playerTrackType);
-                Log.v("swidebug", ". TvInputServiceImpl TvInputSessionImpl getAllTracks() type: " + tvTrackType + ", count: " + count);
                 for (int i = 0; i < count; i++) {
                     Format format = mPlayer.getTrackFormat(playerTrackType, i);
-                    Log.v("swidebug", ". TvInputServiceImpl TvInputSessionImpl getAllTracks() format: " + format);
                     trackId = getTrackId(playerTrackType, i);
                     TvTrackInfo.Builder builder = new TvTrackInfo.Builder(tvTrackType, trackId);
 
                     if (playerTrackType == ExoPlayerImpl.TRACK_TYPE_VIDEO) {
-                        Log.v("swidebug", ". TvInputServiceImpl TvInputSessionImpl getAllTracks() if Video");
                         if (format.width != Format.NO_VALUE) {
                             builder.setVideoWidth(format.width);
                         }
@@ -200,15 +193,13 @@ public class TvInputServiceImpl extends BaseTvInputService {
                             builder.setVideoHeight(format.height);
                         }
                     } else if (playerTrackType == ExoPlayerImpl.TRACK_TYPE_AUDIO) {
-                        Log.v("swidebug", ". TvInputServiceImpl TvInputSessionImpl getAllTracks() if Audio ch: " + format.channelCount);
                         builder.setAudioChannelCount(format.channelCount);
                         builder.setAudioSampleRate(format.sampleRate);
                         if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
                             // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
                         }
-                    } else if (playerTrackType == ExoPlayerImpl.TRACK_TYPE_TEXT) {
-                        Log.v("swidebug", ". TvInputServiceImpl TvInputSessionImpl getAllTracks() if Text");
+                    } else { //playerTrackType == ExoPlayerImpl.TRACK_TYPE_TEXT
                         if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
                             // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
@@ -222,34 +213,54 @@ public class TvInputServiceImpl extends BaseTvInputService {
             return tracks;
         }
 
+        private boolean onPlayProgramError(String e) {
+            requestEpgSync(getCurrentChannelUri());
+            notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
+            Log.i("swidebug", "< BaseTvInputServiceImpl BaseTvInputSessionImpl onPlayProgram() " + e + " is null");
+            return false;
+        }
+
         @Override
         public boolean onPlayProgram(Program program, long startPosMs) {
             Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onPlayProgram() program" + program + ", startPosMs: " + startPosMs);
-            Uri channelUri = getCurrentChannelUri();
-            Channel channel =
-                    ModelUtils.getChannel(
-                            mContext.getContentResolver(), channelUri);
-            Log.i("swidebug", ". TvInputServiceImpl TvInputSessionImpl onPlayProgram() channel" + channel);
             if (program == null) {
-                requestEpgSync(channelUri);
-                notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
-                Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayProgram() if");
-                return false;
+                Channel ch = ModelUtils.getChannel(mContext.getContentResolver(), getCurrentChannelUri());
+                InternalProviderData data;
+                if (ch != null) {
+                    data = ch.getInternalProviderData();
+                    if (data != null) {
+                        String channelId = data.getVideoUrl();
+                        if (channelId != null) {
+                            data.setVideoType(TvContractUtils.SOURCE_TYPE_MPEG_DASH);
+                            program = new Program.Builder()
+                                    .setStartTimeUtcMillis(System.currentTimeMillis())
+                                    .setEndTimeUtcMillis(System.currentTimeMillis()+10000)
+                                    .setInternalProviderData(data)
+                                    .build();
+                        } else {
+                            return onPlayProgramError("program and channelId");
+                        }
+                    } else {
+                        return onPlayProgramError("program and channel internaldata");
+                    }
+                } else {
+                    return onPlayProgramError("program and channel");
+                }
             }
-            createPlayer(program.getInternalProviderData().getVideoType(),
-                    program.getInternalProviderData().getVideoUrl());
+            InternalProviderData data = program.getInternalProviderData();
+            if (data == null) {
+                return onPlayProgramError("data");
+            }
+            createPlayer(data.getVideoType(), data.getVideoUrl());
             if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
-            }
+            notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             mPlayer.setPlayWhenReady(true);
             Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayProgram()");
             return true;
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.N)
         public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
             Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
             createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
@@ -258,9 +269,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
             long recordingStartTime = recordedProgram.getInternalProviderData()
                     .getRecordedProgramStartTime();
             mPlayer.seekTo(recordingStartTime - recordedProgram.getStartTimeUtcMillis());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
-            }
+            notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             mPlayer.setPlayWhenReady(true);
             Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
             return true;
@@ -294,6 +303,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
         private void createPlayer(int videoType, String videoId) {
             Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl createPlayer() videoType: " + videoType + ", videoId: " + videoId);
+            releasePlayer();
             mPlayer = new ExoPlayerImpl(mContext, videoType, videoId);
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
@@ -448,10 +458,9 @@ public class TvInputServiceImpl extends BaseTvInputService {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private class RecordingSessionImpl extends RecordingSession {
+    private static class RecordingSessionImpl extends RecordingSession {
         private static final String TAG = "RecordingSession";
-        private String mInputId;
+        private final String mInputId;
         private long mStartTimeMs;
 
         public RecordingSessionImpl(Context context, String inputId) {
@@ -472,7 +481,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
             // recorded, no other channel from this TvInputService will be accessible. Developers
             // should call notifyError(TvInputManager.RECORDING_ERROR_RESOURCE_BUSY) to alert
             // the framework that this recording cannot be completed.
-            // Developers can update the tuner count in xml/richtvinputservice or programmatically
+            // Developers can update the tuner count in xml/tvinputserviceimpl or programmatically
             // by adding it to TvInputInfo.updateTvInputInfo.
             notifyTuned(uri);
             Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onTune()");

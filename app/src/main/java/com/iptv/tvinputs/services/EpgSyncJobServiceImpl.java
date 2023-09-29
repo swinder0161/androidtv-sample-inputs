@@ -16,13 +16,13 @@
 package com.iptv.tvinputs.services;
 
 import android.net.Uri;
-import android.util.Log;
 
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.iptv.tvinputs.m3u.EPGImpl;
 import com.iptv.tvinputs.m3u.M3UParser;
+import com.iptv.tvinputs.util.Log;
 import com.iptv.tvinputs.util.Utils;
 
 import java.util.List;
