@@ -151,7 +151,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
             }
             if (null == tfmt)
                 break;
-            Log.i("swidebug", ".ExoPlayerImpl getSelectedTrack() tfmt: " + tfmt);
+            Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() tfmt: " + tfmt);
             for (int i=0; i<g.length; i++) {
                 Format fmt = g.getTrackFormat(i);
                 Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() fmt[" + i +"]: " + fmt);
@@ -169,18 +169,26 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     public void setSelectedTrack(int trackType, int index) {
         Log.i("swidebug", "> ExoPlayerImpl setSelectedTrack() type: " + getTrackType(trackType) +
                 ", index: " + index);
-        //TODO
-        if (trackType == TRACK_TYPE_TEXT) {
-            return;
+        int cnt = getTrackCount(trackType);
+        if (index >= cnt) {
+            index = -1;
         }
-        TrackSelectionParameters.Builder builder = mPlayer.getTrackSelectionParameters().buildUpon();
-        TrackSelectionOverride override = new TrackSelectionOverride(getTrackGroup(trackType), index);
 
-        builder.addOverride(override);
-        mPlayer.setTrackSelectionParameters(builder.build());
-        if (trackType == TRACK_TYPE_TEXT && index < 0 && mCaptionListener != null) {
-            mCaptionListener.onCues(Collections.emptyList());
+        TrackSelectionParameters.Builder builder = mPlayer.getTrackSelectionParameters().buildUpon();
+
+        if (index < 0) {
+            Log.e("swidebug", ". ExoPlayerImpl setSelectedTrack() disabling track: " + getTrackType(trackType));
+            builder.setTrackTypeDisabled(trackType, true);
+
+            if (trackType == TRACK_TYPE_TEXT && mCaptionListener != null) {
+                mCaptionListener.onCues(Collections.emptyList());
+            }
+        } else {
+            Log.e("swidebug", ". ExoPlayerImpl setSelectedTrack() " + getTrackFormat(trackType, index));
+            builder.addOverride(new TrackSelectionOverride(getTrackGroup(trackType), index))
+                    .setTrackTypeDisabled(trackType, false);
         }
+        mPlayer.setTrackSelectionParameters(builder.build());
         Log.i("swidebug", "< ExoPlayerImpl setSelectedTrack()");
     }
 
@@ -284,14 +292,12 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         Log.i("swidebug", "> ExoPlayerImpl getTrackGroup() type: " + getTrackType(trackType));
         TrackGroup tg = null;
         Tracks tracks = mPlayer.getCurrentTracks();
-        if (null != tracks) {
-            for (Tracks.Group g : tracks.getGroups()) {
-                Log.i("swidebug", ". ExoPlayerImpl getTrackGroup() group: " + g +
-                        ", cnt: " + g.length + ", type: " + getTrackType(g.getType()));
-                if (g.getType() == trackType) {
-                    tg = g.getMediaTrackGroup();
-                    break;
-                }
+        for (Tracks.Group g : tracks.getGroups()) {
+            Log.i("swidebug", ". ExoPlayerImpl getTrackGroup() group: " + g +
+                    ", cnt: " + g.length + ", type: " + getTrackType(g.getType()));
+            if (g.getType() == trackType) {
+                tg = g.getMediaTrackGroup();
+                break;
             }
         }
         Log.i("swidebug", "< ExoPlayerImpl getTrackGroup()");
