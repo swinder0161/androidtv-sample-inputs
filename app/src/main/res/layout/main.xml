@@ -14,6 +14,6 @@
      limitations under the License.
 -->
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    android:name="com.iptv.tvinputs.MainFragment"
+    android:name="com.iptv.input.activities.MainFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />

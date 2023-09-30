@@ -1,6 +1,6 @@
-package com.iptv.tvinputs.m3u;
+package com.iptv.input.m3u;
 
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.util.Log;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

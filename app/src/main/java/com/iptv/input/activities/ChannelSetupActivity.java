@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.iptv.tvinputs.activity;
+package com.iptv.input.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
 import androidx.leanback.app.GuidedStepFragment;
 
-import com.iptv.tvinputs.services.TvInputServiceImpl;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.services.BaseTvInputServiceImpl;
+import com.iptv.input.util.Log;
 
-/** The setup activity for demonstrating {@link TvInputServiceImpl}. */
-public class TvInputSetupActivity extends Activity {
+/** The setup activity for demonstrating {@link BaseTvInputServiceImpl}. */
+public class ChannelSetupActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("swidebug", "> TvInputSetupActivity onCreate()");
+        Log.i("swidebug", "> ChannelSetupActivity onCreate()");
         if (null == savedInstanceState) {
-            GuidedStepFragment.addAsRoot(this, new FirstStepFragment(), android.R.id.content);
+            GuidedStepFragment.addAsRoot(this, new GuidedStepFragmentImpl(), android.R.id.content);
         }
-        Log.i("swidebug", "< TvInputSetupActivity onCreate()");
+        Log.i("swidebug", "< ChannelSetupActivity onCreate()");
     }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iptv.tvinputs.activity;
+package com.iptv.input.activities;
 
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
@@ -24,30 +24,30 @@ import androidx.leanback.app.GuidedStepFragment;
 import androidx.leanback.widget.GuidanceStylist.Guidance;
 import androidx.leanback.widget.GuidedAction;
 
-import com.iptv.tvinputs.R;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.R;
+import com.iptv.input.util.Log;
 
 import java.util.List;
 
 /** Introduction step in the input setup flow. */
-public class FirstStepFragment extends GuidedStepFragment {
+public class GuidedStepFragmentImpl extends GuidedStepFragment {
 
     @Override
     @NonNull
     public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
-        Log.i("swidebug", "> FirstStepFragment onCreateGuidance()");
+        Log.i("swidebug", "> GuidedStepFragmentImpl onCreateGuidance()");
         String title = getString(R.string.tv_input_service_label);
 
         String description = getString(R.string.setup_first_step_description);
         Drawable icon = getActivity().getDrawable(R.drawable.android_48dp);
         Guidance g = new Guidance(title, description, null, icon);
-        Log.i("swidebug", "< FirstStepFragment onCreateGuidance()");
+        Log.i("swidebug", "< GuidedStepFragmentImpl onCreateGuidance()");
         return g;
     }
 
     @Override
     public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
-        Log.i("swidebug", "> FirstStepFragment onCreateActions()");
+        Log.i("swidebug", "> GuidedStepFragmentImpl onCreateActions()");
         actions.add(
                 new GuidedAction.Builder(getContext())
                         .id(GuidedAction.ACTION_ID_NEXT)
@@ -60,20 +60,20 @@ public class FirstStepFragment extends GuidedStepFragment {
                         .title(R.string.setup_cancel)
                         .build());
         //TODO add about screen
-        Log.i("swidebug", "< FirstStepFragment onCreateActions()");
+        Log.i("swidebug", "< GuidedStepFragmentImpl onCreateActions()");
     }
 
     @Override
     public void onGuidedActionClicked(GuidedAction action) {
-        Log.i("swidebug", "> FirstStepFragment onGuidedActionClicked()");
+        Log.i("swidebug", "> GuidedStepFragmentImpl onGuidedActionClicked()");
         if (action.getId() == GuidedAction.ACTION_ID_NEXT) {
-            Log.i("swidebug", ". FirstStepFragment onGuidedActionClicked() next");
-            GuidedStepFragment.add(getFragmentManager(), new SetupFragment());
+            Log.i("swidebug", ". GuidedStepFragmentImpl onGuidedActionClicked() next");
+            GuidedStepFragment.add(getFragmentManager(), new ChannelSetupStepFragmentImpl());
         } else if (action.getId() == GuidedAction.ACTION_ID_CANCEL) {
-            Log.i("swidebug", ". FirstStepFragment onGuidedActionClicked() cancel");
+            Log.i("swidebug", ". GuidedStepFragmentImpl onGuidedActionClicked() cancel");
             getActivity().setResult(Activity.RESULT_CANCELED);
             getActivity().finishAfterTransition();
         }
-        Log.i("swidebug", "< FirstStepFragment onGuidedActionClicked()");
+        Log.i("swidebug", "< GuidedStepFragmentImpl onGuidedActionClicked()");
     }
 }

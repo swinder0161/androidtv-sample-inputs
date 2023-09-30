@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iptv.tvinputs.activity;
+package com.iptv.input.activities;
 
 import android.graphics.drawable.Drawable;
 import android.media.tv.TvInputInfo;
@@ -22,39 +22,39 @@ import androidx.annotation.NonNull;
 import androidx.leanback.widget.GuidanceStylist.Guidance;
 
 import com.google.android.media.tv.companionlibrary.setup.ChannelSetupStepFragment;
-import com.iptv.tvinputs.R;
-import com.iptv.tvinputs.services.EpgSyncJobServiceImpl;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.R;
+import com.iptv.input.services.EpgSyncJobServiceImpl;
+import com.iptv.input.util.Log;
 
 /**
  * Fragment which shows a sample UI for registering channels and setting up EpgSyncJobServiceImpl to
  * provide program information in the background.
  */
-public class SetupFragment extends ChannelSetupStepFragment<EpgSyncJobServiceImpl> {
+public class ChannelSetupStepFragmentImpl extends ChannelSetupStepFragment<EpgSyncJobServiceImpl> {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("swidebug", "> SetupFragment onCreate()");
+        Log.i("swidebug", "> ChannelSetupStepFragmentImpl onCreate()");
         String inputId = getActivity().getIntent().getStringExtra(TvInputInfo.EXTRA_INPUT_ID);
-        Log.i("swidebug", "< SetupFragment onCreate() inputId: " + inputId);
+        Log.i("swidebug", "< ChannelSetupStepFragmentImpl onCreate() inputId: " + inputId);
     }
 
     @Override
     public Class<EpgSyncJobServiceImpl> getEpgSyncJobServiceClass() {
-        Log.i("swidebug", "> SetupFragment getEpgSyncJobServiceClass()");
-        Log.i("swidebug", "< SetupFragment getEpgSyncJobServiceClass()");
+        Log.i("swidebug", "> ChannelSetupStepFragmentImpl getEpgSyncJobServiceClass()");
+        Log.i("swidebug", "< ChannelSetupStepFragmentImpl getEpgSyncJobServiceClass()");
         return EpgSyncJobServiceImpl.class;
     }
 
     @NonNull
     @Override
     public Guidance onCreateGuidance(@NonNull Bundle savedInstanceState) {
-        Log.i("swidebug", "> SetupFragment onCreateGuidance()");
+        Log.i("swidebug", "> ChannelSetupStepFragmentImpl onCreateGuidance()");
         String title = getString(R.string.tv_input_service_label);
         String description = getString(com.google.android.media.tv.companionlibrary.R.string.tif_channel_setup_description);
         Drawable icon = getActivity().getDrawable(R.drawable.android_48dp);
         Guidance g =  new Guidance(title, description, null, icon);
-        Log.i("swidebug", "< SetupFragment onCreateGuidance()");
+        Log.i("swidebug", "< ChannelSetupStepFragmentImpl onCreateGuidance()");
         return g;
     }
 

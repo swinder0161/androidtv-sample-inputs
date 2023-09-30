@@ -1,4 +1,4 @@
-package com.iptv.tvinputs.m3u;
+package com.iptv.input.m3u;
 
 import android.media.tv.TvContract;
 
@@ -8,9 +8,9 @@ import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.InternalProviderData;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-import com.iptv.tvinputs.util.Log;
-import com.iptv.tvinputs.util.Utils;
-import com.iptv.tvinputs.util.Utils.Tuple;
+import com.iptv.input.util.Log;
+import com.iptv.input.util.Utils;
+import com.iptv.input.util.Utils.Tuple;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;

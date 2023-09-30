@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.iptv.tvinputs'
+    namespace 'com.iptv.input'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.iptv.tvinputs"
+        applicationId "com.iptv.input"
         minSdk 26
         targetSdk 33
         versionCode 1

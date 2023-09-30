@@ -15,4 +15,4 @@
 -->
 <tv-input xmlns:android="http://schemas.android.com/apk/res/android"
     android:canRecord="true"
-    android:setupActivity="com.iptv.tvinputs.activity.TvInputSetupActivity" />
+    android:setupActivity="com.iptv.input.activities.ChannelSetupActivity" />

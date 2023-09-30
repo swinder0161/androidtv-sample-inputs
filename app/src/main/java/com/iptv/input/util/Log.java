@@ -1,4 +1,4 @@
-package com.iptv.tvinputs.util;
+package com.iptv.input.util;
 
 public class Log {
     public static void i(String tag, String msg) {

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.iptv.tvinputs;
+package com.iptv.input.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.R;
+import com.iptv.input.util.Log;
 
 /**
  * MainActivity class that loads {@link MainFragment}.

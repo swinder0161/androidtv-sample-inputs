@@ -1,4 +1,4 @@
-package com.iptv.tvinputs.util;
+package com.iptv.input.util;
 
 public class Utils {
     public static class Tuple<F, S, T> {

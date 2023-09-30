@@ -1,4 +1,4 @@
-package com.iptv.tvinputs.player;
+package com.iptv.input.player;
 
 import android.content.Context;
 import android.media.PlaybackParams;
@@ -31,8 +31,8 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 
 import com.google.android.media.tv.companionlibrary.TvPlayer;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-import com.iptv.tvinputs.m3u.EPGImpl;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.m3u.EPGImpl;
+import com.iptv.input.util.Log;
 
 import java.util.Collections;
 import java.util.List;

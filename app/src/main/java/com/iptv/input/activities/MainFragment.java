@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.iptv.tvinputs;
+package com.iptv.input.activities;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -22,7 +22,8 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.R;
+import com.iptv.input.util.Log;
 
 /**
  * Fragment that shows a web page for Sample TV Input introduction.
@@ -46,6 +47,7 @@ public class MainFragment extends Fragment {
 
         Log.i("swidebug", "> MainFragment onActivityCreated()");
         WebView webView = (WebView) getView();
+        assert webView != null;
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl(URL);
         Log.i("swidebug", "< MainFragment onActivityCreated()");

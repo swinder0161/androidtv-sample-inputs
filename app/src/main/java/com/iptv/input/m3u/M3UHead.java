@@ -1,4 +1,4 @@
-package com.iptv.tvinputs.m3u;
+package com.iptv.input.m3u;
 
 public class M3UHead {
     /**

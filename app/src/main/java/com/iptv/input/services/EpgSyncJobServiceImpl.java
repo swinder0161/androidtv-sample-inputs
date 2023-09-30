@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.iptv.tvinputs.services;
+package com.iptv.input.services;
 
 import android.net.Uri;
 
 import com.google.android.media.tv.companionlibrary.model.Channel;
 import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import com.iptv.tvinputs.m3u.EPGImpl;
-import com.iptv.tvinputs.m3u.M3UParser;
-import com.iptv.tvinputs.util.Log;
-import com.iptv.tvinputs.util.Utils;
+import com.iptv.input.m3u.EPGImpl;
+import com.iptv.input.m3u.M3UParser;
+import com.iptv.input.util.Log;
+import com.iptv.input.util.Utils;
 
 import java.util.List;
 

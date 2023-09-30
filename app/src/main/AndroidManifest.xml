@@ -29,14 +29,16 @@
         android:required="true" />
 
     <application
+        android:name=".IPTVApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.TVInputs"
+        android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:banner="@drawable/app_icon_your_company"
             android:exported="true"
             android:icon="@drawable/app_icon_your_company"
@@ -51,7 +53,8 @@
 
         <!-- Launched by the TV app before it uses TvInputService. This registers channels and
         sets up EpgSyncJobServiceImpl to provide program information in the background. -->
-        <activity android:name=".activity.TvInputSetupActivity"
+        <activity
+            android:name=".activities.ChannelSetupActivity"
             android:theme="@style/TifSetup"
             android:exported="true">
             <intent-filter>
@@ -65,7 +68,7 @@
         multi-audio, parental controls, and overlay view.
         -->
         <service
-            android:name=".services.TvInputServiceImpl"
+            android:name=".services.BaseTvInputServiceImpl"
             android:label="@string/tv_input_service_label"
             android:permission="android.permission.BIND_TV_INPUT"
             android:exported="true">
@@ -74,10 +77,10 @@
                 <action android:name="android.media.tv.TvInputService" />
             </intent-filter>
             <!-- An XML file which describes this input. This provides pointers to the
-            TvInputSetupActivity to the system/TV app. -->
+            ChannelSetupActivity to the system/TV app. -->
             <meta-data
                 android:name="android.media.tv.input"
-                android:resource="@xml/tvinputserviceimpl" />
+                android:resource="@xml/base_tv_input_service_impl" />
         </service>
 
         <!-- This service is for using JobScheduler to sync EPG data. -->

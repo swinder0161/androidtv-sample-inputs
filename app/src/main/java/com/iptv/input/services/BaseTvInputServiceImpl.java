@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iptv.tvinputs.services;
+package com.iptv.input.services;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -50,9 +50,9 @@ import com.google.android.media.tv.companionlibrary.model.Program;
 import com.google.android.media.tv.companionlibrary.model.RecordedProgram;
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
 import com.google.android.media.tv.companionlibrary.utils.TvContractUtils;
-import com.iptv.tvinputs.R;
-import com.iptv.tvinputs.player.ExoPlayerImpl;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.R;
+import com.iptv.input.player.ExoPlayerImpl;
+import com.iptv.input.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,8 +64,8 @@ import java.util.Map;
  * controls, and overlay view.
  */
 @UnstableApi
-public class TvInputServiceImpl extends BaseTvInputService {
-    private static final String TAG = "TvInputServiceImpl";
+public class BaseTvInputServiceImpl extends BaseTvInputService {
+    private static final String TAG = "BaseTvInputServiceImpl";
     private static final boolean DEBUG = false;
     private static final long EPG_SYNC_DELAYED_PERIOD_MS = 1000 * 2; // 2 Seconds
 
@@ -80,27 +80,27 @@ public class TvInputServiceImpl extends BaseTvInputService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i("swidebug", "> TvInputServiceImpl onCreate()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl onCreate()");
         mCaptioningManager = (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
-        Log.i("swidebug", "< TvInputServiceImpl onCreate()");
+        Log.i("swidebug", "< BaseTvInputServiceImpl onCreate()");
     }
 
     @Override
     public final Session onCreateSession(String inputId) {
-        Log.i("swidebug", "> TvInputServiceImpl onCreateSession()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl onCreateSession()");
         TvInputSessionImpl session = new TvInputSessionImpl(this, inputId);
         session.setOverlayViewEnabled(true);
         Session s = super.sessionCreated(session);
-        Log.i("swidebug", "< TvInputServiceImpl onCreateSession()");
+        Log.i("swidebug", "< BaseTvInputServiceImpl onCreateSession()");
         return s;
     }
 
     @Nullable
     @Override
     public TvInputService.RecordingSession onCreateRecordingSession(String inputId) {
-        Log.i("swidebug", "> TvInputServiceImpl onCreateRecordingSession()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl onCreateRecordingSession()");
         TvInputService.RecordingSession r = new RecordingSessionImpl(this, inputId);
-        Log.i("swidebug", "> TvInputServiceImpl onCreateRecordingSession()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl onCreateRecordingSession()");
         return r;
     }
 
@@ -112,8 +112,8 @@ public class TvInputServiceImpl extends BaseTvInputService {
      * @return the track id for the type & index combination.
      */
     private static String getTrackId(int tvTrackType, int trackIndex) {
-        Log.i("swidebug", "> TvInputServiceImpl getTrackId()");
-        Log.i("swidebug", "< TvInputServiceImpl getTrackId()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl getTrackId()");
+        Log.i("swidebug", "< BaseTvInputServiceImpl getTrackId()");
         return tvTrackType + "-" + trackIndex;
     }
 
@@ -124,8 +124,8 @@ public class TvInputServiceImpl extends BaseTvInputService {
      * @return the track index for the given id, as an integer.
      */
     private static int getIndexFromTrackId(String trackId) {
-        Log.i("swidebug", "> TvInputServiceImpl getIndexFromTrackId()");
-        Log.i("swidebug", "< TvInputServiceImpl getIndexFromTrackId()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl getIndexFromTrackId()");
+        Log.i("swidebug", "< BaseTvInputServiceImpl getIndexFromTrackId()");
         return Integer.parseInt(trackId.split("-")[1]);
     }
 
@@ -145,16 +145,16 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
         TvInputSessionImpl(Context context, String inputId) {
             super(context, inputId);
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl TvInputSessionImpl() inputId: " + inputId);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl TvInputSessionImpl() inputId: " + inputId);
             mCaptionEnabled = mCaptioningManager.isEnabled();
             mContext = context;
             mInputId = inputId;
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl TvInputSessionImpl()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl TvInputSessionImpl()");
         }
 
         @Override
         public View onCreateOverlayView() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onCreateOverlayView()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onCreateOverlayView()");
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
             mSubtitleView = (SubtitleView) inflater.inflate(R.layout.subtitleview, null);
 
@@ -168,12 +168,12 @@ public class TvInputServiceImpl extends BaseTvInputService {
             mSubtitleView.setFixedTextSize(TEXT_UNIT_PIXELS, captionTextSize);
             mSubtitleView.setVisibility(View.VISIBLE);
 
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onCreateOverlayView()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onCreateOverlayView()");
             return mSubtitleView;
         }
 
         private List<TvTrackInfo> getAllTracks() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl getAllTracks()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl getAllTracks()");
             String trackId;
             List<TvTrackInfo> tracks = new ArrayList<>();
 
@@ -209,7 +209,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
                     tracks.add(builder.build());
                 }
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl getAllTracks()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl getAllTracks()");
             return tracks;
         }
 
@@ -222,7 +222,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
         @Override
         public boolean onPlayProgram(Program program, long startPosMs) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onPlayProgram() program" + program + ", startPosMs: " + startPosMs);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram() program" + program + ", startPosMs: " + startPosMs);
             if (program == null) {
                 Channel ch = ModelUtils.getChannel(mContext.getContentResolver(), getCurrentChannelUri());
                 InternalProviderData data;
@@ -257,12 +257,12 @@ public class TvInputServiceImpl extends BaseTvInputService {
             }
             notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             mPlayer.setPlayWhenReady(true);
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayProgram()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram()");
             return true;
         }
 
         public boolean onPlayRecordedProgram(RecordedProgram recordedProgram) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
             createPlayer(recordedProgram.getInternalProviderData().getVideoType(),
                     recordedProgram.getInternalProviderData().getVideoUrl());
 
@@ -271,49 +271,49 @@ public class TvInputServiceImpl extends BaseTvInputService {
             mPlayer.seekTo(recordingStartTime - recordedProgram.getStartTimeUtcMillis());
             notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             mPlayer.setPlayWhenReady(true);
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onPlayRecordedProgram()");
             return true;
         }
 
         public TvPlayer getTvPlayer() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl getTvPlayer()");
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl getTvPlayer() mPlayer: " + mPlayer);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl getTvPlayer()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl getTvPlayer() mPlayer: " + mPlayer);
             return mPlayer;
         }
 
         @Override
         public boolean onTune(Uri channelUri) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onTune() uri: " + channelUri);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onTune() uri: " + channelUri);
             if (DEBUG) {
                 Log.d(TAG, "Tune to " + channelUri.toString());
             }
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
             releasePlayer();
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onTune()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onTune()");
             return super.onTune(channelUri);
         }
 
         @Override
         public void onPlayAdvertisement(Advertisement advertisement) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onPlayAdvertisement()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onPlayAdvertisement()");
             createPlayer(TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE,
                     advertisement.getRequestUrl());
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onPlayAdvertisement()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onPlayAdvertisement()");
         }
 
         private void createPlayer(int videoType, String videoId) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl createPlayer() videoType: " + videoType + ", videoId: " + videoId);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl createPlayer() videoType: " + videoType + ", videoId: " + videoId);
             releasePlayer();
             mPlayer = new ExoPlayerImpl(mContext, videoType, videoId);
             mPlayer.addListener(this);
             mPlayer.setCaptionListener(this);
             mPlayer.prepare();
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl createPlayer()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl createPlayer()");
         }
 
         @Override
         public void onSetCaptionEnabled(boolean enabled) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onSetCaptionEnabled() en: " + enabled);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onSetCaptionEnabled() en: " + enabled);
             mCaptionEnabled = enabled;
             if (mPlayer != null) {
                 if (mCaptionEnabled) {
@@ -322,14 +322,14 @@ public class TvInputServiceImpl extends BaseTvInputService {
                     mPlayer.setSelectedTrack(ExoPlayerImpl.TRACK_TYPE_TEXT, ExoPlayerImpl.TRACK_DISABLED);
                 }
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onSetCaptionEnabled()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onSetCaptionEnabled()");
         }
 
         @Override
         public boolean onSelectTrack(int tvTrackType, String trackId) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onSelectTrack()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onSelectTrack()");
             if (trackId == null) {
-                Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onSelectTrack() track null");
+                Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onSelectTrack() track null");
                 return true;
             }
 
@@ -337,7 +337,7 @@ public class TvInputServiceImpl extends BaseTvInputService {
             if (mPlayer != null) {
                 if (tvTrackType == TvTrackInfo.TYPE_SUBTITLE) {
                     if (! mCaptionEnabled) {
-                        Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onSelectTrack() no captions");
+                        Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onSelectTrack() no captions");
                         return false;
                     }
                     mSelectedSubtitleTrackIndex = trackIndex;
@@ -345,15 +345,15 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
                 mPlayer.setSelectedTrack(mTrackTypes.get(tvTrackType), trackIndex);
                 notifyTrackSelected(tvTrackType, trackId);
-                Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onSelectTrack() true");
+                Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onSelectTrack() true");
                 return true;
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onSelectTrack() false");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onSelectTrack() false");
             return false;
         }
 
         private void releasePlayer() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl releasePlayer()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl releasePlayer()");
             if (mPlayer != null) {
                 mPlayer.removeListener(this);
                 mPlayer.setSurface(null);
@@ -361,42 +361,42 @@ public class TvInputServiceImpl extends BaseTvInputService {
                 mPlayer.release();
                 mPlayer = null;
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl releasePlayer()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl releasePlayer()");
         }
 
         @Override
         public void onRelease() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onRelease()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onRelease()");
             super.onRelease();
             releasePlayer();
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onRelease()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onRelease()");
         }
 
         @Override
         public void onBlockContent(TvContentRating rating) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onBlockContent()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onBlockContent()");
             super.onBlockContent(rating);
             releasePlayer();
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onBlockContent()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onBlockContent()");
         }
 
         private float getCaptionFontSize() {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl getCaptionFontSize()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl getCaptionFontSize()");
             Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
                     .getDefaultDisplay();
             Point displaySize = new Point();
             display.getSize(displaySize);
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl getCaptionFontSize()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl getCaptionFontSize()");
             return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
                     CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
         }
 
         @Override
         public void onStateChanged(boolean playWhenReady, int playbackState) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onStateChanged() pvr: " +
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onStateChanged() pvr: " +
                     playWhenReady + ", state: " + playbackState);
             if (mPlayer == null) {
-                Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onStateChanged() mPlayer null");
+                Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onStateChanged() mPlayer null");
                 return;
             }
 
@@ -417,44 +417,44 @@ public class TvInputServiceImpl extends BaseTvInputService {
                     playWhenReady && playbackState == Player.STATE_BUFFERING) {
                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_BUFFERING);
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onStateChanged()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onStateChanged()");
         }
 
         @Override
         public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
                 float pixelWidthHeightRatio) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onVideoSizeChanged()");
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onVideoSizeChanged()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onVideoSizeChanged()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onVideoSizeChanged()");
             // Do nothing.
         }
 
         @Override
         public void onError(Exception e) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onError()");
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onError()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onError()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onError()");
             Log.e(TAG, e.getMessage());
         }
 
         @Override
         public void onCues(List<Cue> cues) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl onCues()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onCues()");
             if (mSubtitleView != null) {
                 mSubtitleView.setCues(cues);
             }
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl onCues()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onCues()");
         }
 
         public void requestEpgSync(final Uri channelUri) {
-            Log.i("swidebug", "> TvInputServiceImpl TvInputSessionImpl requestEpgSync()");
-            EpgSyncJobService.requestImmediateSync(TvInputServiceImpl.this, mInputId,
-                    new ComponentName(TvInputServiceImpl.this, EpgSyncJobServiceImpl.class));
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl requestEpgSync()");
+            EpgSyncJobService.requestImmediateSync(BaseTvInputServiceImpl.this, mInputId,
+                    new ComponentName(BaseTvInputServiceImpl.this, EpgSyncJobServiceImpl.class));
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     onTune(channelUri);
                 }
             }, EPG_SYNC_DELAYED_PERIOD_MS);
-            Log.i("swidebug", "< TvInputServiceImpl TvInputSessionImpl requestEpgSync()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl requestEpgSync()");
         }
     }
 
@@ -465,14 +465,14 @@ public class TvInputServiceImpl extends BaseTvInputService {
 
         public RecordingSessionImpl(Context context, String inputId) {
             super(context, inputId);
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl RecordingSessionImpl()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl RecordingSessionImpl()");
             mInputId = inputId;
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl RecordingSessionImpl()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl RecordingSessionImpl()");
         }
 
         @Override
         public void onTune(Uri uri) {
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl onTune() uri: " + uri);
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl onTune() uri: " + uri);
             super.onTune(uri);
             if (DEBUG) {
                 Log.d(TAG, "Tune recording session to " + uri);
@@ -481,26 +481,26 @@ public class TvInputServiceImpl extends BaseTvInputService {
             // recorded, no other channel from this TvInputService will be accessible. Developers
             // should call notifyError(TvInputManager.RECORDING_ERROR_RESOURCE_BUSY) to alert
             // the framework that this recording cannot be completed.
-            // Developers can update the tuner count in xml/tvinputserviceimpl or programmatically
+            // Developers can update the tuner count in xml/base_tv_input_service_impl or programmatically
             // by adding it to TvInputInfo.updateTvInputInfo.
             notifyTuned(uri);
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onTune()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl onTune()");
         }
 
         @Override
         public void onStartRecording(final Uri uri) {
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl onStartRecording()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl onStartRecording()");
             super.onStartRecording(uri);
             if (DEBUG) {
                 Log.d(TAG, "onStartRecording");
             }
             mStartTimeMs = System.currentTimeMillis();
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onStartRecording()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl onStartRecording()");
         }
 
         @Override
         public void onStopRecording(Program programToRecord) {
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl onStopRecording()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl onStopRecording()");
             if (DEBUG) {
                 Log.d(TAG, "onStopRecording");
             }
@@ -521,28 +521,28 @@ public class TvInputServiceImpl extends BaseTvInputService {
                         .setInternalProviderData(internalProviderData)
                         .build();
             notifyRecordingStopped(recordedProgram);
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onStopRecording()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl onStopRecording()");
         }
 
         @Override
         public void onStopRecordingChannel(Channel channelToRecord) {
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl onStopRecordingChannel()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl onStopRecordingChannel()");
             if (DEBUG) {
                 Log.d(TAG, "onStopRecording");
             }
             // Program sources in this sample always include program info, so execution here
             // indicates an error.
             notifyError(TvInputManager.RECORDING_ERROR_UNKNOWN);
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onStopRecordingChannel()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl onStopRecordingChannel()");
         }
 
         @Override
         public void onRelease() {
-            Log.i("swidebug", "> TvInputServiceImpl RecordingSessionImpl onRelease()");
+            Log.i("swidebug", "> BaseTvInputServiceImpl RecordingSessionImpl onRelease()");
             if (DEBUG) {
                 Log.d(TAG, "onRelease");
             }
-            Log.i("swidebug", "< TvInputServiceImpl RecordingSessionImpl onRelease()");
+            Log.i("swidebug", "< BaseTvInputServiceImpl RecordingSessionImpl onRelease()");
         }
     }
 }

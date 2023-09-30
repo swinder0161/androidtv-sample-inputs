@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iptv.tvinputs.services;
+package com.iptv.input.services;
 
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -24,7 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.google.android.media.tv.companionlibrary.sync.EpgSyncJobService;
-import com.iptv.tvinputs.util.Log;
+import com.iptv.input.util.Log;
 
 import java.util.List;
 
