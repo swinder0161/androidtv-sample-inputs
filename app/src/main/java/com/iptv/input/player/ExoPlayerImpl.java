@@ -3,6 +3,9 @@ package com.iptv.input.player;
 import android.content.Context;
 import android.media.PlaybackParams;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Size;
 import android.view.Surface;
 
 import androidx.annotation.NonNull;
@@ -12,7 +15,6 @@ import androidx.media3.common.MediaItem;
 import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackGroup;
 import androidx.media3.common.TrackSelectionOverride;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
@@ -62,36 +64,36 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     }
 
     private final Context mContext;
-    private ExoPlayer mPlayer;
+    private final ExoPlayer mPlayer;
     private PlaybackParams mPlaybackParams;
     private final CopyOnWriteArrayList<Listener> mListeners;
     private final List<TvPlayer.Callback> mTvPlayerCallbacks;
     private CaptionListener mCaptionListener;
     private int mPlaybackState;
     private boolean mPlayWhenReady;
+    private final TracksImpl mTracks;
 
     public ExoPlayerImpl(Context context, int contentType, String channelId) {
         Log.i("swidebug", "> ExoPlayerImpl ExoPlayerImpl() contentType: " + contentType +
                 ", channelId: " + channelId);
         mContext = context;
-        mPlayer = null;
+        mPlayer = new ExoPlayer.Builder(mContext).setSeekForwardIncrementMs(10000)
+                .setSeekBackIncrementMs(10000).build();
         mPlaybackParams = null;
         mListeners = new CopyOnWriteArrayList<>();
         mTvPlayerCallbacks = new CopyOnWriteArrayList<>();
         mCaptionListener = null;
         mPlaybackState = ExoPlayer.STATE_IDLE;
         mPlayWhenReady = false;
+        mTracks = new TracksImpl(mPlayer);
+
+        mPlayer.addListener(this);
 
         String videoUrl = EPGImpl.getInstance().getChannelUrl(channelId);
         String licenseUrl = EPGImpl.getInstance().getChannelLicenseUrl(channelId);
 
         MediaSource mediaSource = getMediaSource(contentType, videoUrl, licenseUrl);
         if (null != mediaSource) {
-            mPlayer = new ExoPlayer.Builder(mContext)
-                    .setSeekForwardIncrementMs(10000)
-                    .setSeekBackIncrementMs(10000)
-                    .build();
-            mPlayer.addListener(this);
             mPlayer.setMediaSource(mediaSource, true);
         }
         Log.i("swidebug", "< ExoPlayerImpl ExoPlayerImpl()");
@@ -113,21 +115,17 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
 
     public int getTrackCount(int trackType) {
         Log.i("swidebug", "> ExoPlayerImpl getTrackCount() type: " + getTrackType(trackType));
-        int cnt = 0;
-        TrackGroup tg = getTrackGroup(trackType);
-        if (null != tg)
-            cnt = tg.length;
-        Log.i("swidebug", "> ExoPlayerImpl getTrackCount() cnt: " + cnt);
+        int cnt = mTracks.getTrackCount(trackType);
+        Log.i("swidebug", "< ExoPlayerImpl getTrackCount() cnt: " + cnt);
         return cnt;
     }
 
     public Format getTrackFormat(int trackType, int index) {
         Log.i("swidebug", "> ExoPlayerImpl getTrackFormat() type: " + getTrackType(trackType) +
-                "index: " + index);
-        Format fmt = null;
-        TrackGroup tg = getTrackGroup(trackType);
-        if (null != tg) {
-            fmt = tg.getFormat(index);
+                ", index: " + index);
+        Format fmt = mTracks.getTrackFormat(trackType, index);
+        if ((fmt != null) && (trackType == TRACK_TYPE_VIDEO)) {
+            fmt = mPlayer.getVideoFormat();
         }
         Log.i("swidebug", "< ExoPlayerImpl getTrackFormat() fmt: " + fmt);
         return fmt;
@@ -135,34 +133,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
 
     public int getSelectedTrack(int trackType) {
         Log.i("swidebug", "> ExoPlayerImpl getSelectedTrack() type: " + getTrackType(trackType));
-        int index = -1;
-        Tracks ts = mPlayer.getCurrentTracks();
-        for (Tracks.Group g : ts.getGroups()) {
-            if (g.getType() != trackType)
-                continue;
-            Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() group: " +
-                    g + ", cnt: " + g.length + ", type: " + getTrackType(g.getType()));
-            Format tfmt = null;
-            if (trackType == TRACK_TYPE_AUDIO) {
-                tfmt = mPlayer.getAudioFormat();
-            } else if (trackType == TRACK_TYPE_VIDEO) {
-                tfmt = mPlayer.getVideoFormat();
-            } else if (trackType == TRACK_TYPE_TEXT) {
-                Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() cues: " + mPlayer.getCurrentCues());
-            }
-            if (null == tfmt)
-                break;
-            Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() tfmt: " + tfmt);
-            for (int i=0; i<g.length; i++) {
-                Format fmt = g.getTrackFormat(i);
-                Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() fmt[" + i +"]: " + fmt);
-                if (fmt.id.equals(tfmt.id)) {
-                    index = i;
-                    Log.i("swidebug", ". ExoPlayerImpl getSelectedTrack() found match: " + i);
-                    break;
-                }
-            }
-        }
+        int index = mTracks.getSelectedTrack(trackType);
         Log.i("swidebug", "< ExoPlayerImpl getSelectedTrack() index: " + index);
         return index;
     }
@@ -186,8 +157,8 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
             }
         } else {
             Log.e("swidebug", ". ExoPlayerImpl setSelectedTrack() " + getTrackFormat(trackType, index));
-            builder.addOverride(new TrackSelectionOverride(getTrackGroup(trackType), index))
-                    .setTrackTypeDisabled(trackType, false);
+            builder.setTrackTypeDisabled(trackType, false)
+                    .setOverrideForType(new TrackSelectionOverride(mTracks.getTrackGroup(trackType, index), 0));
         }
         mPlayer.setTrackSelectionParameters(builder.build());
         Log.i("swidebug", "< ExoPlayerImpl setSelectedTrack()");
@@ -228,6 +199,13 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         mPlaybackState = ExoPlayer.STATE_IDLE;
         mPlayer.release();
         Log.i("swidebug", "< ExoPlayerImpl release()");
+    }
+
+    public Size getMaxSize() {
+        Log.i("swidebug", "> ExoPlayerImpl getMaxSize()");
+        Size sz = mTracks.getMaxSize();
+        Log.i("swidebug", "< ExoPlayerImpl getMaxSize(): " + sz);
+        return sz;
     }
 
     private MediaSource getMediaSource(int contentType, String videoUrl, String licenseUrl) {
@@ -298,20 +276,18 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         return "TRACK_TYPE_" + trackType;
     }
 
-    private TrackGroup getTrackGroup(int trackType) {
-        Log.i("swidebug", "> ExoPlayerImpl getTrackGroup() type: " + getTrackType(trackType));
-        TrackGroup tg = null;
-        Tracks tracks = mPlayer.getCurrentTracks();
-        for (Tracks.Group g : tracks.getGroups()) {
-            Log.i("swidebug", ". ExoPlayerImpl getTrackGroup() group: " + g +
-                    ", cnt: " + g.length + ", type: " + getTrackType(g.getType()));
-            if (g.getType() == trackType) {
-                tg = g.getMediaTrackGroup();
-                break;
-            }
+    private String strPlaybackState(int state) {
+        switch(state) {
+            case ExoPlayer.STATE_IDLE:
+                return "STATE_IDLE";
+            case ExoPlayer.STATE_BUFFERING:
+                return "STATE_BUFFERING";
+            case ExoPlayer.STATE_READY:
+                return "STATE_READY";
+            case ExoPlayer.STATE_ENDED:
+                return "STATE_ENDED";
         }
-        Log.i("swidebug", "< ExoPlayerImpl getTrackGroup()");
-        return tg;
+        return "STATE_" + state;
     }
 
     private void maybeReportPlayerState() {
@@ -319,7 +295,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         boolean playWhenReady = mPlayer.getPlayWhenReady();
         int playbackState = mPlayer.getPlaybackState();
         Log.i("swidebug", ". ExoPlayerImpl maybeReportPlayerState() playWhenReady: " + playWhenReady +
-                ", playbackState: " + playbackState);
+                ", playbackState: " + strPlaybackState(playbackState));
         if (mPlayWhenReady != playWhenReady ||
                 mPlaybackState != playbackState) {
             for (Listener listener : mListeners) {
@@ -335,7 +311,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     @Override
     public void onPlaybackStateChanged(int playbackState) {
         Player.Listener.super.onPlaybackStateChanged(playbackState);
-        Log.i("swidebug", "> ExoPlayerImpl onPlaybackStateChanged() playbackState: " + playbackState);
+        Log.i("swidebug", "> ExoPlayerImpl onPlaybackStateChanged() playbackState: " + strPlaybackState(playbackState));
         for (Callback tvCallback : mTvPlayerCallbacks) {
             if (mPlayWhenReady && playbackState == ExoPlayer.STATE_ENDED) {
                 tvCallback.onCompleted();
@@ -373,7 +349,15 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         for (Listener listener : mListeners) {
             listener.onError(error);
         }
-        maybeReportPlayerState();
+
+        new Handler(Looper.getMainLooper()).post(() -> {
+            Log.i("swidebug", "> ExoPlayerImpl onPlayerError() run()");
+            mPlayer.seekTo((long) (mPlayer.getCurrentPosition() + 1000));
+            mPlayer.prepare();
+            mPlayer.setPlayWhenReady(true);
+            Log.i("swidebug", "< ExoPlayerImpl onPlayerError() run()");
+        });
+        //maybeReportPlayerState();
         Log.i("swidebug", "< ExoPlayerImpl onPlayerError()");
     }
 
@@ -396,6 +380,13 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
                     videoSize.pixelWidthHeightRatio);
         }
         Log.i("swidebug", "< ExoPlayerImpl onVideoSizeChanged()");
+    }
+
+    @Override
+    public void onTracksChanged(@NonNull Tracks tracks) {
+        Log.i("swidebug", "> ExoPlayerImpl onTracksChanged()");
+        mTracks.onTracksChanged(tracks);
+        Log.i("swidebug", "< ExoPlayerImpl onTracksChanged()");
     }
     /* Overrides from Player.Listener end*/
 

@@ -26,6 +26,7 @@ import android.media.tv.TvTrackInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Size;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -87,7 +88,7 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
 
     @Override
     public final Session onCreateSession(String inputId) {
-        Log.i("swidebug", "> BaseTvInputServiceImpl onCreateSession()");
+        Log.i("swidebug", "> BaseTvInputServiceImpl onCreateSession() inputId: " + inputId);
         TvInputSessionImpl session = new TvInputSessionImpl(this, inputId);
         session.setOverlayViewEnabled(true);
         Session s = super.sessionCreated(session);
@@ -182,24 +183,31 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
                 int count = mPlayer.getTrackCount(playerTrackType);
                 for (int i = 0; i < count; i++) {
                     Format format = mPlayer.getTrackFormat(playerTrackType, i);
-                    trackId = getTrackId(playerTrackType, i);
+                    trackId = getTrackId(tvTrackType, i);
                     TvTrackInfo.Builder builder = new TvTrackInfo.Builder(tvTrackType, trackId);
 
                     if (playerTrackType == ExoPlayerImpl.TRACK_TYPE_VIDEO) {
-                        if (format.width != Format.NO_VALUE) {
+                        Size sz = mPlayer.getMaxSize();
+                        if (sz.getWidth() != Format.NO_VALUE) {
+                            builder.setVideoWidth(sz.getWidth());
+                        } else if (format.width != Format.NO_VALUE) {
                             builder.setVideoWidth(format.width);
                         }
-                        if (format.height != Format.NO_VALUE) {
+                        if (sz.getHeight() != Format.NO_VALUE) {
+                            builder.setVideoHeight(sz.getHeight());
+                        } else if (format.height != Format.NO_VALUE) {
                             builder.setVideoHeight(format.height);
                         }
                     } else if (playerTrackType == ExoPlayerImpl.TRACK_TYPE_AUDIO) {
                         builder.setAudioChannelCount(format.channelCount);
                         builder.setAudioSampleRate(format.sampleRate);
+                        Log.i("swidebug", ". BaseTvInputServiceImpl TvInputSessionImpl getAllTracks() AUDIO language: " + format.language);
                         if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
                             // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
                         }
                     } else { //playerTrackType == ExoPlayerImpl.TRACK_TYPE_TEXT
+                        Log.i("swidebug", ". BaseTvInputServiceImpl TvInputSessionImpl getAllTracks() TEXT language: " + format.language);
                         if (format.language != null && !UNKNOWN_LANGUAGE.equals(format.language)) {
                             // TvInputInfo expects {@code null} for unknown language.
                             builder.setLanguage(format.language);
@@ -222,7 +230,7 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
 
         @Override
         public boolean onPlayProgram(Program program, long startPosMs) {
-            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram() program" + program + ", startPosMs: " + startPosMs);
+            Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram() program: " + program + ", startPosMs: " + startPosMs);
             if (program == null) {
                 Channel ch = ModelUtils.getChannel(mContext.getContentResolver(), getCurrentChannelUri());
                 InternalProviderData data;
@@ -448,12 +456,8 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
             Log.i("swidebug", "> BaseTvInputServiceImpl TvInputSessionImpl requestEpgSync()");
             EpgSyncJobService.requestImmediateSync(BaseTvInputServiceImpl.this, mInputId,
                     new ComponentName(BaseTvInputServiceImpl.this, EpgSyncJobServiceImpl.class));
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onTune(channelUri);
-                }
-            }, EPG_SYNC_DELAYED_PERIOD_MS);
+            if (null != channelUri)
+                new Handler(Looper.getMainLooper()).postDelayed(() -> onTune(channelUri), EPG_SYNC_DELAYED_PERIOD_MS);
             Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl requestEpgSync()");
         }
     }
