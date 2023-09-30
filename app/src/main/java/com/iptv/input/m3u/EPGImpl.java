@@ -46,12 +46,19 @@ public class EPGImpl {
         @NonNull
         @Override
         public String toString() {
-            return "[MyChannel@" + this.hashCode() + "]:{M3UItem: " + mM3UItem + ", Programs: " + mProgramMap + "}";
+            return "[MyChannel@" + this.hashCode() + "]:{M3UItem: " + mM3UItem + ", manifestType: " + getManifestType() + ", Programs: " + mProgramMap + "}";
+        }
+        private String getManifestType() {
+            switch(manifestType) {
+                case TvContractUtils.SOURCE_TYPE_MPEG_DASH: return "MPEG_DASH";
+                case TvContractUtils.SOURCE_TYPE_HLS: return "HLS";
+            }
+            return "Unknown";
         }
         MyChannel() {
             mProgramMap = new TreeMap<>();
         }
-        M3UItem mM3UItem = null; String tvGenre = "Others";
+        M3UItem mM3UItem = null; String tvGenre = "Others"; int manifestType;
         SortedMap<Long, MyProgram> mProgramMap;
     }
 
@@ -198,6 +205,16 @@ public class EPGImpl {
         }
         return Integer.parseInt(aa.toString());
     }
+
+    private int getManifestType(String url) {
+        if (url.endsWith(".mpd")) {
+            return TvContractUtils.SOURCE_TYPE_MPEG_DASH;
+        } else if (url.endsWith(".m3u8")) {
+            return TvContractUtils.SOURCE_TYPE_HLS;
+        }
+        return TvContractUtils.SOURCE_TYPE_MPEG_DASH;
+    }
+
     public boolean updateChannel(M3UItem item) {
         //Log.v("swidebug", "> EPGImpl updateChannel() M3UItem: " + item);
         boolean ret = true;
@@ -217,6 +234,7 @@ public class EPGImpl {
                     }
                 }
             }
+            ch.manifestType = getManifestType(ch.mM3UItem.getStreamURL());
             mChannelMap.put(item.getChannelID(), ch);
         } catch (Exception ex) {
             ret = false;
@@ -274,7 +292,7 @@ public class EPGImpl {
                 }
                 try {
                     InternalProviderData internalProviderData = new InternalProviderData();
-                    internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_MPEG_DASH);
+                    internalProviderData.setVideoType(ch.manifestType);
                     internalProviderData.setVideoUrl(ch.mM3UItem.getChannelID());
                     Channel c = new Channel.Builder()
                             .setDisplayName(ch.mM3UItem.getChannelName())
@@ -297,7 +315,7 @@ public class EPGImpl {
 
     private Program makeProgramFromMyProgram(MyChannel ch, MyProgram p) {
         InternalProviderData internalProviderData = new InternalProviderData();
-        internalProviderData.setVideoType(TvContractUtils.SOURCE_TYPE_MPEG_DASH);
+        internalProviderData.setVideoType(ch.manifestType);
         internalProviderData.setVideoUrl(ch.mM3UItem.getChannelID());
         return new Program.Builder()
                 .setTitle(p.title)

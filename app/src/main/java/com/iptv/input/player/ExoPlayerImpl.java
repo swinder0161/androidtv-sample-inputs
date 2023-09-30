@@ -26,6 +26,7 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink;
 import androidx.media3.exoplayer.dash.DashChunkSource;
 import androidx.media3.exoplayer.dash.DashMediaSource;
 import androidx.media3.exoplayer.dash.DefaultDashChunkSource;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 
@@ -265,7 +266,16 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
             } break;
             case TvContractUtils.SOURCE_TYPE_HLS: {
                 Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_HLS");
-                mediaSource = null;
+                mediaSource = new HlsMediaSource.Factory(manifestDataSourceFactory)
+                        .createMediaSource(
+                                new MediaItem.Builder()
+                                        .setUri(Uri.parse(videoUrl))
+                                        .setDrmConfiguration(
+                                                new MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
+                                                        .setLicenseUri(licenseUrl).build())
+                                        .setMimeType(MimeTypes.APPLICATION_M3U8)
+                                        .setTag(null)
+                                        .build());
             } break;
             case TvContractUtils.SOURCE_TYPE_HTTP_PROGRESSIVE: {
                 Log.i("swidebug", ". ExoPlayerImpl getMediaSource() SOURCE_TYPE_HTTP_PROGRESSIVE");
