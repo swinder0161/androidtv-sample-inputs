@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.iptv.input'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.iptv.input"
         minSdk 26
-        targetSdk 33
+        targetSdk 34
         versionCode 3
         versionName "1.1.1"
 

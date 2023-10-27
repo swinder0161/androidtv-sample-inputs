@@ -245,12 +245,7 @@ public class EPGImpl {
 
     private void refreshEPG(int syncType) {
         try {
-            Thread th = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    M3UParser.getInstance().parse(Utils.getPlaylistUrl(), syncType);
-                }
-            });
+            Thread th = new Thread(() -> M3UParser.getInstance().parse(Utils.getPlaylistUrl(), syncType));
             th.start();
             th.join();
         } catch (Exception ex) {
@@ -345,15 +340,11 @@ public class EPGImpl {
                     list.add(makeProgramFromMyProgram(ch, prevP));
                     prevP = null;
                 }
-                /*if (p.start > endMs) {
-                    break;
-                }*/
-
                 list.add(makeProgramFromMyProgram(ch, p));
             }
             if (list.size() == 0) {
                 MyProgram p = new MyProgram();
-                p.start = System.currentTimeMillis(); p.stop = p.start + 60 * 60 * 1000;
+                p.start = System.currentTimeMillis(); p.stop = p.start + 60 * 1000;
                 p.title = ch.mM3UItem.getChannelName();
                 list.add(makeProgramFromMyProgram(ch, p));
             }

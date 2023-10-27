@@ -69,8 +69,8 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
     private static final String TAG = "BaseTvInputServiceImpl";
     private static final boolean DEBUG = false;
     private static final long EPG_SYNC_DELAYED_PERIOD_MS = 1000 * 2; // 2 Seconds
-
     private CaptioningManager mCaptioningManager;
+    private String mPrevChannel = "";
 
     private final Map<Integer, Integer> mTrackTypes = new HashMap<Integer, Integer>() {{
         put(TvTrackInfo.TYPE_AUDIO, ExoPlayerImpl.TRACK_TYPE_AUDIO);
@@ -224,7 +224,7 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
         private boolean onPlayProgramError(String e) {
             requestEpgSync(getCurrentChannelUri());
             notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
-            Log.i("swidebug", "< BaseTvInputServiceImpl BaseTvInputSessionImpl onPlayProgram() " + e + " is null");
+            Log.i("swidebug", "< BaseTvInputServiceImpl BaseTvInputSessionImpl onPlayProgram() " + e + " null");
             return false;
         }
 
@@ -249,22 +249,30 @@ public class BaseTvInputServiceImpl extends BaseTvInputService {
                             return onPlayProgramError("program and channelId");
                         }
                     } else {
-                        return onPlayProgramError("program and channel internaldata");
+                        return onPlayProgramError("program and channel internal data");
                     }
                 } else {
                     return onPlayProgramError("program and channel");
                 }
+                EpgSyncJobServiceImpl.requestImmediateSync(mContext.getApplicationContext());
             }
             InternalProviderData data = program.getInternalProviderData();
             if (data == null) {
                 return onPlayProgramError("data");
             }
-            createPlayer(data.getVideoType(), data.getVideoUrl());
+            String videoUrl = data.getVideoUrl();
+            Log.i("swidebug", ". BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram() videoUrl: " +
+                    videoUrl + ", mPrevChannel: " + mPrevChannel);
+            if(mPlayer!= null && 0 == mPrevChannel.compareToIgnoreCase(videoUrl) && mPlayer.heartBeat()) {
+                return true;
+            }
+            createPlayer(data.getVideoType(), videoUrl);
             if (startPosMs > 0) {
                 mPlayer.seekTo(startPosMs);
             }
             notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
             mPlayer.setPlayWhenReady(true);
+            mPrevChannel = videoUrl;
             Log.i("swidebug", "< BaseTvInputServiceImpl TvInputSessionImpl onPlayProgram()");
             return true;
         }

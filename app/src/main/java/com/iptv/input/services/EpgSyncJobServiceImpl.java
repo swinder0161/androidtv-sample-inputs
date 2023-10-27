@@ -15,6 +15,8 @@
  */
 package com.iptv.input.services;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.net.Uri;
 
 import com.google.android.media.tv.companionlibrary.model.Channel;
@@ -31,6 +33,9 @@ import java.util.List;
  * EpgSyncJobService that periodically runs to update channels and programs.
  */
 public class EpgSyncJobServiceImpl extends EpgSyncJobService {
+    public static final long DEFAULT_SYNC_PERIOD_MILLIS = 1000 * 60 * 60 * 12; // 12 hour
+    public static final long DEFAULT_PERIODIC_EPG_DURATION_MILLIS = 1000 * 60 * 60 * 48; // 48 Hour
+
     @Override
     public List<Channel> getChannels() {
         Log.i("swidebug", "> EpgSyncJobServiceImpl getChannels()");
@@ -51,5 +56,22 @@ public class EpgSyncJobServiceImpl extends EpgSyncJobService {
         Log.i("swidebug", "< EpgSyncJobServiceImpl getProgramsForChannel() count: " + list.size());
         //Log.v("swidebug", "< EpgSyncJobServiceImpl getProgramsForChannel() list: " + list);
         return list;
+    }
+
+    public static void requestImmediateSync(final Context context) {
+        Log.i("swidebug", "> EpgSyncJobServiceImpl requestImmediateSync()");
+        String inputId = context.getSharedPreferences(EpgSyncJobService.PREFERENCE_EPG_SYNC,
+                Context.MODE_PRIVATE).getString(EpgSyncJobService.BUNDLE_KEY_INPUT_ID, null);
+        Log.i("swidebug", ". EpgSyncJobServiceImpl requestImmediateSync() inputId: " + inputId);
+        if (inputId != null) {
+            Thread th = new Thread(()-> {
+                EpgSyncJobService.requestImmediateSync(context, inputId,
+                        EpgSyncJobServiceImpl.DEFAULT_PERIODIC_EPG_DURATION_MILLIS,
+                        new ComponentName(context, EpgSyncJobServiceImpl.class));
+                Log.i("swidebug", ". EpgSyncJobServiceImpl requestImmediateSync() requested");
+            });
+            th.start();
+        }
+        Log.i("swidebug", "< EpgSyncJobServiceImpl requestImmediateSync()");
     }
 }

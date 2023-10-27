@@ -63,6 +63,57 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         void onCues(List<Cue> cues);
     }
 
+    private class HeartBeatRunnable implements Runnable {
+        private final Object mHeartBeatMutex = new Object();
+        private boolean bHeartBeatReleased = false;
+        private long mHeartBeatCurrentPosition = 0L;
+        private int mHeartBeatsMissed = 0;
+        public void release() {
+            synchronized (mHeartBeatMutex) {
+                Log.i("swidebug", "HeartBeatRunnable release()");
+                bHeartBeatReleased = true;
+            }
+        }
+        public boolean heartBeat() {
+            return mHeartBeatsMissed == 0;
+        }
+        Runnable mWorker = new Runnable() {
+            @Override
+            public void run() {
+                synchronized (mHeartBeatMutex) {
+                    if(bHeartBeatReleased) {
+                        Log.i("swidebug", "HeartBeatRunnable worker run() return");
+                        return;
+                    }
+                    long p = mPlayer.getCurrentPosition();
+                    if (p != mHeartBeatCurrentPosition) {
+                        mHeartBeatCurrentPosition = p;
+                        mHeartBeatsMissed = 0;
+                    } else {
+                        mHeartBeatsMissed++;
+                    }
+                }
+            }
+        };
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (mHeartBeatMutex) {
+                    if (bHeartBeatReleased) {
+                        Log.i("swidebug", "HeartBeatRunnable run() break");
+                        break;
+                    }
+                    new Handler(Looper.getMainLooper()).post(mWorker);
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
     private final Context mContext;
     private final ExoPlayer mPlayer;
     private PlaybackParams mPlaybackParams;
@@ -72,6 +123,8 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
     private int mPlaybackState;
     private boolean mPlayWhenReady;
     private final TracksImpl mTracks;
+    private Surface mSurface;
+    private final HeartBeatRunnable mHeartBeat;
 
     public ExoPlayerImpl(Context context, int contentType, String channelId) {
         Log.i("swidebug", "> ExoPlayerImpl ExoPlayerImpl() contentType: " + contentType +
@@ -86,6 +139,8 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         mPlaybackState = ExoPlayer.STATE_IDLE;
         mPlayWhenReady = false;
         mTracks = new TracksImpl(mPlayer);
+        mSurface = null;
+        mHeartBeat = new HeartBeatRunnable();
 
         mPlayer.addListener(this);
 
@@ -96,6 +151,8 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         if (null != mediaSource) {
             mPlayer.setMediaSource(mediaSource, true);
         }
+        Thread th = new Thread(mHeartBeat);
+        th.start();
         Log.i("swidebug", "< ExoPlayerImpl ExoPlayerImpl()");
     }
 
@@ -196,6 +253,8 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
 
     public void release() {
         Log.i("swidebug", "> ExoPlayerImpl release()");
+        mHeartBeat.release();
+        mSurface = null;
         mPlaybackState = ExoPlayer.STATE_IDLE;
         mPlayer.release();
         Log.i("swidebug", "< ExoPlayerImpl release()");
@@ -206,6 +265,13 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
         Size sz = mTracks.getMaxSize();
         Log.i("swidebug", "< ExoPlayerImpl getMaxSize(): " + sz);
         return sz;
+    }
+
+    public boolean heartBeat() {
+        Log.i("swidebug", "> ExoPlayerImpl heartBeat()");
+        boolean ret = mHeartBeat.heartBeat();
+        Log.i("swidebug", "< ExoPlayerImpl heartBeat(): " + ret);
+        return ret;
     }
 
     private MediaSource getMediaSource(int contentType, String videoUrl, String licenseUrl) {
@@ -352,7 +418,7 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
 
         new Handler(Looper.getMainLooper()).post(() -> {
             Log.i("swidebug", "> ExoPlayerImpl onPlayerError() run()");
-            mPlayer.seekTo((long) (mPlayer.getCurrentPosition() + 1000));
+            mPlayer.seekToDefaultPosition();
             mPlayer.prepare();
             mPlayer.setPlayWhenReady(true);
             Log.i("swidebug", "< ExoPlayerImpl onPlayerError() run()");
@@ -429,14 +495,13 @@ public class ExoPlayerImpl implements Player.Listener, TvPlayer {
 
     @Override
     public void setSurface(Surface surface) {
-        Log.i("swidebug", "> ExoPlayerImpl setSurface() surface: " + surface);
-        //mPlayer.setPlayWhenReady(false);
+        Log.i("swidebug", "> ExoPlayerImpl setSurface() surface: " + surface + ", mSurface: " + mSurface);
         mPlayer.setVideoSurface(surface);
-        if (null != surface) {
-            //mPlayer.setPlayWhenReady(true);
+        if (null != surface && mSurface != surface) {
             mPlayer.seekToDefaultPosition();
             mPlayer.prepare();
         }
+        mSurface = surface;
         Log.i("swidebug", "< ExoPlayerImpl setSurface()");
     }
 

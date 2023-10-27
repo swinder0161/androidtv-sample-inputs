@@ -36,6 +36,7 @@ public class BootReceiverImpl extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i("swidebug", "> BootReceiverImpl onReceive()");
+        EpgSyncJobServiceImpl.requestImmediateSync(context.getApplicationContext());
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         // If there are not pending jobs. Create a sync job and schedule it.
@@ -47,9 +48,8 @@ public class BootReceiverImpl extends BroadcastReceiver{
                 // Set up periodic sync only when input has set up.
                 EpgSyncJobService.setUpPeriodicSync(context, inputId,
                         new ComponentName(context, EpgSyncJobServiceImpl.class));
+                Log.i("swidebug", ". BootReceiverImpl onReceive() job scheduled");
             }
-            Log.i("swidebug", "< BootReceiverImpl onReceive() if");
-            return;
         }
         Log.i("swidebug", "< BootReceiverImpl onReceive()");
     }

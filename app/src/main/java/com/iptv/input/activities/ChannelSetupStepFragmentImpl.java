@@ -60,11 +60,11 @@ public class ChannelSetupStepFragmentImpl extends ChannelSetupStepFragment<EpgSy
 
     @Override
     public long getFullSyncWindowSec() {
-        return 1000 * 60 * 60 * 24 * 3; // 3 days
+        return EpgSyncJobServiceImpl.DEFAULT_PERIODIC_EPG_DURATION_MILLIS;
     }
 
     @Override
     public long getFullSyncFrequencyMillis() {
-        return 1000 * 60 * 60 * 6; // 6 hrs
+        return EpgSyncJobServiceImpl.DEFAULT_SYNC_PERIOD_MILLIS;
     }
 }
