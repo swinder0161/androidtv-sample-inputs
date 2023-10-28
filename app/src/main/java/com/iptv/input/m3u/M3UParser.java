@@ -127,7 +127,7 @@ public class M3UParser {
         if (((syncType == PARSE_FULL) && (timeNow - mLastSyncTime < 6*60*60)) || // 6 hours
                 ((syncType == PARSE_MANIFEST) && (timeNow - mLastSyncTimeManifest < 2*60*60))) { // 2 hours
             Log.i("swidebug", ". M3UParser parse() too early to sync type: " + syncType);
-            return true;
+            return false;
         }
         Log.i("swidebug", ". M3UParser parse() sync type: " + syncType);
         boolean success = true;

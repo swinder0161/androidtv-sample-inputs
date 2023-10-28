@@ -14,28 +14,42 @@
      limitations under the License.
 -->
 
-<LinearLayout android:layout_width="match_parent"
+<RelativeLayout android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/urlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/playlist_url"/>
+        <EditText
+            android:id="@+id/editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"/>
+        <Button
+            android:id="@+id/urlSaveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/saved"/>
+        <Button
+            android:id="@+id/urlRestoreButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/restore"/>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/cacheLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/playlist_url"/>
-    <EditText
-        android:id="@+id/editText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"/>
-    <Button
-        android:id="@+id/urlSaveButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="@string/saved"/>
-    <Button
-        android:id="@+id/urlRestoreButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="@string/restore"/>
-</LinearLayout>
+        android:paddingTop="100dp">
+        <Button
+            android:id="@+id/clearCacheButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/clear_cache"/>
+    </LinearLayout>
+</RelativeLayout>

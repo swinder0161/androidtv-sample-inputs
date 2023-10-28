@@ -2,7 +2,6 @@ package com.iptv.input.util;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.SharedPreferences;
 
 public class Utils {
     public static class Tuple<F, S, T> {
@@ -33,14 +32,13 @@ public class Utils {
 
     public static void setPlaylistUrl(String playlistUrl) {
         sPlaylistUrl = playlistUrl;
-        SharedPreferences prefs  = getApplicationContext().getSharedPreferences(pref_name, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(pref_url, playlistUrl).apply();
+        getApplicationContext().getSharedPreferences(pref_name, Context.MODE_PRIVATE).edit()
+                .putString(pref_url, playlistUrl).apply();
     }
 
     public static String getPlaylistUrl() {
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences(pref_name, Context.MODE_PRIVATE);
-        sPlaylistUrl = prefs.getString(pref_url, sPlaylistUrl);
+        sPlaylistUrl = getApplicationContext().getSharedPreferences(pref_name, Context.MODE_PRIVATE)
+                .getString(pref_url, sPlaylistUrl);
         return sPlaylistUrl;
     }
 }

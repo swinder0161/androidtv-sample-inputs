@@ -24,8 +24,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.iptv.input.R;
+import com.iptv.input.m3u.EPGImpl;
 import com.iptv.input.util.Log;
 import com.iptv.input.util.Utils;
 
@@ -56,10 +58,13 @@ public class MainFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Log.i("swidebug", "> MainFragment onActivityCreated()");
-        LinearLayout layout = (LinearLayout) getView();
-        EditText editText = (EditText) layout.findViewById(R.id.editText);
-        Button urlSaveButton = (Button) layout.findViewById(R.id.urlSaveButton);
-        Button urlRestoreButton = (Button) layout.findViewById(R.id.urlRestoreButton);
+        RelativeLayout layout = (RelativeLayout) getView();
+        LinearLayout urlLayout = (LinearLayout) layout.findViewById(R.id.urlLayout);
+        EditText editText = (EditText) urlLayout.findViewById(R.id.editText);
+        Button urlSaveButton = (Button) urlLayout.findViewById(R.id.urlSaveButton);
+        Button urlRestoreButton = (Button) urlLayout.findViewById(R.id.urlRestoreButton);
+        LinearLayout cacheLayout = (LinearLayout) layout.findViewById(R.id.cacheLayout);
+        Button clearCacheButton = (Button) cacheLayout.findViewById(R.id.clearCacheButton);
 
         editText.setText(Utils.getPlaylistUrl());
         editText.addTextChangedListener(new TextWatcher() {
@@ -84,9 +89,9 @@ public class MainFragment extends Fragment {
             updateUrlSaveButton(urlSaveButton, url);
         });
 
-        urlRestoreButton.setOnClickListener(view -> {
-            editText.setText(Utils.getPlaylistUrl());
-        });
+        urlRestoreButton.setOnClickListener(view -> editText.setText(Utils.getPlaylistUrl()));
+
+        clearCacheButton.setOnClickListener(view -> EPGImpl.getInstance().clearPref());
         Log.i("swidebug", "< MainFragment onActivityCreated()");
     }
 }

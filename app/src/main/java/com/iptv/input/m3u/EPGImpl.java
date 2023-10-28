@@ -1,5 +1,7 @@
 package com.iptv.input.m3u;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.tv.TvContract;
 
 import androidx.annotation.NonNull;
@@ -242,11 +244,69 @@ public class EPGImpl {
         return ret;
     }
 
-    private void refreshEPG(int syncType) {
+    private static final String pref_ch = "epg_channels";
+    private static final String pref_lic = "epg_licenses";
+    private static final String key_time = "sync_time";
+    private void saveToPref() {
+        Log.d("swidebug", "> EPGImpl saveToPref()");
+        synchronized (this) {
+            Log.d("swidebug", ". EPGImpl saveToPref()");
+            SharedPreferences.Editor prefs_ch  = Utils.getApplicationContext()
+                    .getSharedPreferences(pref_ch, Context.MODE_PRIVATE).edit().clear();
+            SharedPreferences.Editor prefs_lic  = Utils.getApplicationContext()
+                    .getSharedPreferences(pref_lic, Context.MODE_PRIVATE).edit().clear();
+            for(String k : mChannelMap.keySet()) {
+                MyChannel ch = mChannelMap.get(k);
+                if (ch.mM3UItem == null) {
+                    Log.e("swidebug", ". EPGImpl saveToPref() Skipping Channel as not present in manifest: " + ch);
+                    continue;
+                }
+                prefs_ch.putString(k, ch.mM3UItem.getStreamURL()).apply();
+                prefs_lic.putString(k, ch.mM3UItem.getLicenseKeyUrl()).apply();
+            }
+            prefs_ch.putLong(key_time, System.currentTimeMillis()).apply();
+            prefs_lic.putLong(key_time, System.currentTimeMillis()).apply();
+        }
+        Log.d("swidebug", "< EPGImpl saveToPref()");
+    }
+
+    private String getFromPref(String pref, String k) {
+        Log.d("swidebug", "> EPGImpl getFromPref() pref: " + pref + ", key: " + k);
+        String ret = "";
+        synchronized (this) {
+            Log.d("swidebug", ". EPGImpl getFromPref()");
+            SharedPreferences prefs  = Utils.getApplicationContext().getSharedPreferences(pref, Context.MODE_PRIVATE);
+            if((prefs.getLong(key_time, 0) + 3*60*60*1000) < System.currentTimeMillis()) {
+                Log.e("swidebug", "< EPGImpl getFromPref() ret: " + ret);
+                return ret;
+            }
+            ret =  prefs.getString(k, "");
+        }
+        Log.d("swidebug", "< EPGImpl getFromPref() ret: " + ret);
+        return ret;
+    }
+
+    public void clearPref() {
+        Log.d("swidebug", "> EPGImpl clearPref()");
+        Utils.getApplicationContext().getSharedPreferences(pref_ch, Context.MODE_PRIVATE).edit().clear().apply();
+        Utils.getApplicationContext().getSharedPreferences(pref_lic, Context.MODE_PRIVATE).edit().clear().apply();
+        Log.d("swidebug", "< EPGImpl clearPref()");
+    }
+
+    private void refreshEPG(int syncType, boolean block) {
+        Log.e("swidebug", ". EPGImpl refreshEPG() block: " + block);
         try {
-            Thread th = new Thread(() -> M3UParser.getInstance().parse(Utils.getPlaylistUrl(), syncType));
+            Thread th = new Thread(() -> {
+                boolean ret = M3UParser.getInstance().parse(Utils.getPlaylistUrl(), syncType);
+                Log.e("swidebug", ". EPGImpl refreshEPG() run() parse: " + ret);
+                if(ret) {
+                    Thread t = new Thread(() -> saveToPref());
+                    t.start();
+                }
+            });
             th.start();
-            th.join();
+            if(block)
+                th.join();
         } catch (Exception ex) {
             Log.e("swidebug", ". EPGImpl refreshEPG() exception: " + ex.getMessage());
         }
@@ -275,7 +335,7 @@ public class EPGImpl {
 
     public List<Channel> getChannels() {
         Log.d("swidebug", "> EPGImpl getChannels()");
-        refreshEPG(M3UParser.PARSE_FULL);
+        refreshEPG(M3UParser.PARSE_FULL, true);
         updateGenreLists();
         List<Channel> list = new ArrayList<>();
         for (String k : mGenres.keySet()) {
@@ -326,7 +386,7 @@ public class EPGImpl {
     }
 
     public List<Program> getPrograms(Channel channel, long startMs, long endMs) {
-        refreshEPG(M3UParser.PARSE_FULL);
+        refreshEPG(M3UParser.PARSE_FULL, true);
         List<Program> list = new ArrayList<>();
         //Log.v("swidebug", ". EPGImpl getPrograms() id: " + channel.getInternalProviderData().getVideoUrl());
         MyChannel ch = mChannelMap.get(channel.getInternalProviderData().getVideoUrl());
@@ -357,20 +417,31 @@ public class EPGImpl {
 
     public String getChannelUrl(String channelid) {
         Log.i("swidebug", "> EPGImpl getChannelUrl(): " + channelid);
-        refreshEPG(M3UParser.PARSE_MANIFEST);
-        MyChannel ch = mChannelMap.get(channelid);
-        String u = ch == null ? null :
-                ch.mM3UItem == null ? null : ch.mM3UItem.getStreamURL();
+        String u = getFromPref(pref_ch, channelid);
+        if (u.equals("")) {
+            refreshEPG(M3UParser.PARSE_MANIFEST, true);
+            MyChannel ch = mChannelMap.get(channelid);
+            u = ch == null ? null :
+                    ch.mM3UItem == null ? null : ch.mM3UItem.getStreamURL();
+        } else {
+            refreshEPG(M3UParser.PARSE_MANIFEST, false);
+        }
         Log.i("swidebug", "< EPGImpl getChannelUrl(): " + u);
         return u;
     }
 
     public String getChannelLicenseUrl(String channelid) {
-        refreshEPG(M3UParser.PARSE_MANIFEST);
-        MyChannel ch = mChannelMap.get(channelid);
-        String u = ch == null ? null :
-                ch.mM3UItem == null ? null : ch.mM3UItem.getLicenseKeyUrl();
-        Log.i("swidebug", ". EPGImpl getChannelLicUrl(): " + u);
+        Log.i("swidebug", "> EPGImpl getChannelLicenseUrl(): " + channelid);
+        String u = getFromPref(pref_lic, channelid);
+        if (u.equals("")) {
+            refreshEPG(M3UParser.PARSE_MANIFEST, true);
+            MyChannel ch = mChannelMap.get(channelid);
+            u = ch == null ? null :
+                    ch.mM3UItem == null ? null : ch.mM3UItem.getLicenseKeyUrl();
+        } else {
+            refreshEPG(M3UParser.PARSE_MANIFEST, false);
+        }
+        Log.i("swidebug", "< EPGImpl getChannelLicUrl(): " + u);
         return u;
     }
 }
