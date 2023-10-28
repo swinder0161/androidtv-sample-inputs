@@ -3,11 +3,13 @@ package com.iptv.input;
 import android.app.Application;
 
 import com.iptv.input.util.Log;
+import com.iptv.input.util.Utils;
 
 public class IPTVApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Utils.setApplication(this);
         Log.i("swidebug", ". IPTVApplication onCreate()");
     }
 

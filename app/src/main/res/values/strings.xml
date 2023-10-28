@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">TV Inputs</string>
     <string name="tv_input_service_label" translatable="false">TV Input</string>
-    <string name="setup_first_step_description">"TV Channels"</string>
+    <string name="setup_first_step_description">TV Channels</string>
     <string name="setup_add_channel">Add Channels</string>
+    <string name="setup_update_url">Update Playlist Url</string>
     <string name="setup_cancel">Cancel Setup</string>
     <string name="personal_settings">Personal Settings</string>
     <string name="watch_trailer_1">Watch trailer</string>
@@ -16,4 +17,8 @@
     <!-- Error messages -->
     <string name="error_fragment_message">An error occurred</string>
     <string name="dismiss_error">Dismiss</string>
+    <string name="playlist_url">Playlist URL:</string>
+    <string name="save">Save</string>
+    <string name="saved">Saved</string>
+    <string name="restore">Restore</string>
 </resources>

@@ -16,6 +16,7 @@
 package com.iptv.input.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -26,11 +27,13 @@ import androidx.leanback.widget.GuidedAction;
 
 import com.iptv.input.R;
 import com.iptv.input.util.Log;
+import com.iptv.input.util.Utils;
 
 import java.util.List;
 
 /** Introduction step in the input setup flow. */
 public class GuidedStepFragmentImpl extends GuidedStepFragment {
+    private boolean mRefresh = false;
 
     @Override
     @NonNull
@@ -38,35 +41,58 @@ public class GuidedStepFragmentImpl extends GuidedStepFragment {
         Log.i("swidebug", "> GuidedStepFragmentImpl onCreateGuidance()");
         String title = getString(R.string.tv_input_service_label);
 
-        String description = getString(R.string.setup_first_step_description);
-        Drawable icon = getActivity().getDrawable(R.drawable.android_48dp);
+        String description = Utils.getPlaylistUrl();
+        if(description.length() < 7) {
+            description = "Playlist Url not updated";
+        }
+        Drawable icon = getContext().getDrawable(R.drawable.android_48dp);
         Guidance g = new Guidance(title, description, null, icon);
         Log.i("swidebug", "< GuidedStepFragmentImpl onCreateGuidance()");
         return g;
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        Log.i("swidebug", "> GuidedStepFragmentImpl onResume() mRefresh: " + mRefresh);
+        if(mRefresh)
+            getActivity().recreate();
+        mRefresh = true;
+        Log.i("swidebug", "< GuidedStepFragmentImpl onResume()");
+    }
+
+    @Override
     public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
         Log.i("swidebug", "> GuidedStepFragmentImpl onCreateActions()");
+        if(Utils.getPlaylistUrl().length() > 7) {
+            actions.add(
+                    new GuidedAction.Builder(getContext())
+                            .id(GuidedAction.ACTION_ID_NEXT)
+                            .title(R.string.setup_add_channel)
+                            .hasNext(true)
+                            .build());
+        }
         actions.add(
                 new GuidedAction.Builder(getContext())
-                        .id(GuidedAction.ACTION_ID_NEXT)
-                        .title(R.string.setup_add_channel)
-                        .hasNext(true)
+                        .id(GuidedAction.ACTION_ID_CONTINUE)
+                        .title(R.string.setup_update_url)
                         .build());
         actions.add(
                 new GuidedAction.Builder(getContext())
                         .id(GuidedAction.ACTION_ID_CANCEL)
                         .title(R.string.setup_cancel)
                         .build());
-        //TODO add about screen
         Log.i("swidebug", "< GuidedStepFragmentImpl onCreateActions()");
     }
 
     @Override
     public void onGuidedActionClicked(GuidedAction action) {
         Log.i("swidebug", "> GuidedStepFragmentImpl onGuidedActionClicked()");
-        if (action.getId() == GuidedAction.ACTION_ID_NEXT) {
+        if (action.getId() == GuidedAction.ACTION_ID_CONTINUE) {
+            Log.i("swidebug", ". GuidedStepFragmentImpl onGuidedActionClicked() continue");
+            Intent intent = new Intent(getContext(), MainActivity.class);
+            getContext().startActivity(intent);
+        } else if (action.getId() == GuidedAction.ACTION_ID_NEXT) {
             Log.i("swidebug", ". GuidedStepFragmentImpl onGuidedActionClicked() next");
             GuidedStepFragment.add(getFragmentManager(), new ChannelSetupStepFragmentImpl());
         } else if (action.getId() == GuidedAction.ACTION_ID_CANCEL) {

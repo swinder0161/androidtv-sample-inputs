@@ -67,7 +67,6 @@ public class EPGImpl {
 
     /**           Map<ch id,  MyChannel> */
     private final Map<String, MyChannel> mChannelMap = new HashMap<>();
-    /*Map for channelid, genre*/
 
     private static EPGImpl instance = null;
     public static EPGImpl getInstance() {
@@ -275,7 +274,8 @@ public class EPGImpl {
     }
 
     public List<Channel> getChannels() {
-        refreshEPG(M3UParser.PARSE_MANIFEST);
+        Log.d("swidebug", "> EPGImpl getChannels()");
+        refreshEPG(M3UParser.PARSE_FULL);
         updateGenreLists();
         List<Channel> list = new ArrayList<>();
         for (String k : mGenres.keySet()) {
@@ -305,6 +305,7 @@ public class EPGImpl {
                 }
             }
         }
+        Log.d("swidebug", "< EPGImpl getChannels() : " + list.size());
         return list;
     }
 
@@ -327,7 +328,9 @@ public class EPGImpl {
     public List<Program> getPrograms(Channel channel, long startMs, long endMs) {
         refreshEPG(M3UParser.PARSE_FULL);
         List<Program> list = new ArrayList<>();
+        //Log.v("swidebug", ". EPGImpl getPrograms() id: " + channel.getInternalProviderData().getVideoUrl());
         MyChannel ch = mChannelMap.get(channel.getInternalProviderData().getVideoUrl());
+        //Log.v("swidebug", ". EPGImpl getPrograms() ch: " + ch);
         if (null != ch) {
             MyProgram prevP = null;
             for (Long k : ch.mProgramMap.keySet()) {

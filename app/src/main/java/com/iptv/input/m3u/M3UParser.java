@@ -87,7 +87,7 @@ public class M3UParser {
      * @param url
      *            a file to be parsed.
      */
-    public void parse(String url, int syncType) {
+    public boolean parse(String url, int syncType) {
         if (mHandler == null) {
             mHandler = new M3UHandler() {
                 @Override
@@ -103,9 +103,11 @@ public class M3UParser {
                 }
             };
         }
+        boolean ret;
         synchronized (mutex) {
-            parse(url, mHandler, syncType);
+            ret = parse(url, mHandler, syncType);
         }
+        return ret;
     }
 
     /**
@@ -116,16 +118,16 @@ public class M3UParser {
      * @param handler
      *            a specific handler which will not change the default handler.
      */
-    public void parse(String url, M3UHandler handler, int syncType) {
+    public boolean parse(String url, M3UHandler handler, int syncType) {
         if (handler == null) { // No need do anything, if no handler.
-            return;
+            return false;
         }
         long timeNow = System.currentTimeMillis()/1000;
         //wait 1 hour for resync
         if (((syncType == PARSE_FULL) && (timeNow - mLastSyncTime < 6*60*60)) || // 6 hours
                 ((syncType == PARSE_MANIFEST) && (timeNow - mLastSyncTimeManifest < 2*60*60))) { // 2 hours
             Log.i("swidebug", ". M3UParser parse() too early to sync type: " + syncType);
-            return;
+            return true;
         }
         Log.i("swidebug", ". M3UParser parse() sync type: " + syncType);
         boolean success = true;
@@ -180,6 +182,7 @@ public class M3UParser {
             Log.e("swidebug", ". M3UParser parse() io exception: " + e.getMessage());
             e.printStackTrace();
         }
+        return success;
     }
 
     private String trim(String str) {

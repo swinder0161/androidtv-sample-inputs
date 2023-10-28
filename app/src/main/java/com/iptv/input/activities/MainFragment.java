@@ -16,21 +16,31 @@ package com.iptv.input.activities;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import com.iptv.input.R;
 import com.iptv.input.util.Log;
+import com.iptv.input.util.Utils;
 
 /**
  * Fragment that shows a web page for Sample TV Input introduction.
  */
 public class MainFragment extends Fragment {
-    private static final String URL =
-            "http://github.com/googlesamples/androidtv-sample-inputs/blob/master/README.md";
+    private void updateUrlSaveButton(Button urlSaveButton, String url) {
+        String savedUrl = Utils.getPlaylistUrl();
+        if (0 == savedUrl.compareTo(url)) {
+            urlSaveButton.setText(R.string.saved);
+        } else {
+            urlSaveButton.setText(R.string.save);
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -46,10 +56,37 @@ public class MainFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Log.i("swidebug", "> MainFragment onActivityCreated()");
-        WebView webView = (WebView) getView();
-        assert webView != null;
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl(URL);
+        LinearLayout layout = (LinearLayout) getView();
+        EditText editText = (EditText) layout.findViewById(R.id.editText);
+        Button urlSaveButton = (Button) layout.findViewById(R.id.urlSaveButton);
+        Button urlRestoreButton = (Button) layout.findViewById(R.id.urlRestoreButton);
+
+        editText.setText(Utils.getPlaylistUrl());
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateUrlSaveButton(urlSaveButton, "" + s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        urlSaveButton.setOnClickListener(view -> {
+            String url = editText.getText().toString();
+            Log.i("swidebug", ". MainFragment onActivityCreated() onClick() url: " + url);
+            if (url.length() > 7) {
+                Utils.setPlaylistUrl(url);
+            }
+            updateUrlSaveButton(urlSaveButton, url);
+        });
+
+        urlRestoreButton.setOnClickListener(view -> {
+            editText.setText(Utils.getPlaylistUrl());
+        });
         Log.i("swidebug", "< MainFragment onActivityCreated()");
     }
 }
